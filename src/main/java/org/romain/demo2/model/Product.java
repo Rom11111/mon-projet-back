@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.validator.constraints.Length;
+import org.romain.demo2.view.ProductDisplayForBorrower;
 
 import java.util.ArrayList;
 import java.util.List;

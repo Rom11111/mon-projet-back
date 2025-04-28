@@ -39,7 +39,7 @@ public class AuthController {
     @PostMapping("/signin") // Gère l'inscription
     public ResponseEntity<User> signin(@RequestBody @Valid User user) {
 
-        user.setRole(Role.LOANER); //Simple utilisateur lors de la création
+        user.setRole(Role.BORROWER); //Simple utilisateur lors de la création
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         userDao.save(user);
 

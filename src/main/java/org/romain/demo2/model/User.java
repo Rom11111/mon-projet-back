@@ -27,7 +27,7 @@ public class User {
 
 
     @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "ENUM('LOANER','TECH', 'ADMIN')")
+    @Column(columnDefinition = "ENUM('BORROWER','TECH', 'ADMIN')")
     protected Role role;
     //protected boolean admin; // si admin est vrai c'est un admin, si faux ce n'est pas un admin
 }
