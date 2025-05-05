@@ -7,7 +7,7 @@ import org.romain.demo2.model.Product;
 import org.romain.demo2.security.AppUserDetails;
 import org.romain.demo2.security.ISecurityUtils;
 import org.romain.demo2.security.IsAdmin;
-import org.romain.demo2.security.IsLoaner;
+import org.romain.demo2.security.IsClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -46,14 +46,14 @@ public class ProductController {
     }
 
     @GetMapping("/products")
-    @IsLoaner
+    @IsClient
     public List<Product> getAll() {
 
         return productDao.findAll();
     }
 
     @PostMapping("/product")
-    @IsLoaner
+    @IsClient
     public ResponseEntity<Product> save(
             @RequestBody @Valid Product product,
             @AuthenticationPrincipal AppUserDetails userDetails) {
@@ -76,7 +76,7 @@ public class ProductController {
     }
 
     @DeleteMapping("/product/{id}")
-    @IsLoaner
+    @IsClient
     public ResponseEntity<Product> delete(
             @PathVariable int id,
             @AuthenticationPrincipal AppUserDetails userDetails) {
@@ -103,7 +103,7 @@ public class ProductController {
 
 
     @PutMapping("/product/{id}") //mise à jour
-    @IsLoaner
+    @IsClient
     public ResponseEntity<Product> update(
             @PathVariable int id,
             @RequestBody @Valid Product savingProduct) {

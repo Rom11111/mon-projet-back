@@ -17,6 +17,18 @@ public class User {
     protected Integer id;
 
     @NotBlank
+    @Column(nullable = false)
+    protected String firstname;
+
+    @NotBlank
+    @Column(nullable = false)
+    protected String lastname;
+
+    @NotBlank
+    @Column(nullable = false)
+    protected String address;
+
+    @NotBlank
     @Email
     @Column(unique = true, nullable = false) // On ne peut pas avoir 2 fois le même Email
     protected String email;
@@ -27,7 +39,7 @@ public class User {
 
 
     @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "ENUM('LOANER','TECH', 'ADMIN')")
+    @Column(columnDefinition = "ENUM('CLIENT','TECH', 'ADMIN')")
     protected Role role;
     //protected boolean admin; // si admin est vrai c'est un admin, si faux ce n'est pas un admin
 }

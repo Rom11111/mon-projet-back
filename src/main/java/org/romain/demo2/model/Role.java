@@ -4,5 +4,5 @@ public enum Role {
 
     TECH,
     ADMIN,
-    LOANER,
+    CLIENT,
 }

@@ -1,11 +1,12 @@
-INSERT INTO user(email, password, role)
-VALUES ("a@a.com", "$2a$10$Fpc/zCciK4CwnYR6.YFSAuXNjrYDk7brys.s.V/KcoUuLQ6ElY8q2", "ADMIN"),
-       ("b@b.com", "$2a$10$Fpc/zCciK4CwnYR6.YFSAuXNjrYDk7brys.s.V/KcoUuLQ6ElY8q2", "LOANER"),
-       ("c@c.com", "$2a$10$Fpc/zCciK4CwnYR6.YFSAuXNjrYDk7brys.s.V/KcoUuLQ6ElY8q2", "TECH"),
-       ("d@d.com", "$2a$10$Fpc/zCciK4CwnYR6.YFSAuXNjrYDk7brys.s.V/KcoUuLQ6ElY8q2", "TECH");
+INSERT INTO user(firstname, lastname, email, password, role, address)
+VALUES ("John", "Doe", "a@a.com", "$2a$10$Fpc/zCciK4CwnYR6.YFSAuXNjrYDk7brys.s.V/KcoUuLQ6ElY8q2", "ADMIN", "Adresse 1"),
+       ("Jay", "White", "b@b.com", "$2a$10$Fpc/zCciK4CwnYR6.YFSAuXNjrYDk7brys.s.V/KcoUuLQ6ElY8q2", "CLIENT", "Adresse 2"),
+       ("Bob", "Allen", "c@c.com", "$2a$10$Fpc/zCciK4CwnYR6.YFSAuXNjrYDk7brys.s.V/KcoUuLQ6ElY8q2", "TECH", "Adresse 3"),
+       ("Gary", "Cow", "d@d.com", "$2a$10$Fpc/zCciK4CwnYR6.YFSAuXNjrYDk7brys.s.V/KcoUuLQ6ElY8q2", "TECH", "Adresse 4");
 
+ALTER TABLE user MODIFY address VARCHAR(255) DEFAULT 'Inconnue';
 
--- Insérer les états du matériel
+-- état du matériel
 INSERT INTO etat (id, name)
 VALUES (1, 'neuf'),
        (2, 'occasion'),
@@ -15,7 +16,7 @@ VALUES (1, 'neuf'),
 
 -- Insérer les étiquettes du matériel
 INSERT INTO label (id, name, color)
-VALUES (1, 'Promotion', '#77FF77'),
+VALUES (1, 'Neuf', '#77FF77'),
        (2, 'Matériel haut de gamme', 'yellow'),
        (3, 'Reconditionné premium', 'grey'),
        (4, 'Location longue durée', 'darkred'),
@@ -32,7 +33,7 @@ VALUES (1, 'MacBook Pro M2', 'mbp-m2', 'Ordinateur portable Apple 16 pouces', 24
        (7, 'Mac Mini M2', 'macmini-m2', 'Mini PC performant Apple', 799, 1, 3),
        (8, 'ASUS ROG Zephyrus', 'asusrog', 'PC gamer puissant', 2299, 2, 3);
 
--- Associer du matériel aux étiquettes
+-- étiquettes matériels
 INSERT INTO product_label (product_id, label_id)
 VALUES (1, 1), -- MacBook Pro M2 en promotion
        (2, 2), -- Dell XPS 15 haut de gamme
