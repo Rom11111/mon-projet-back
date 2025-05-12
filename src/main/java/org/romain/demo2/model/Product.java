@@ -51,4 +51,7 @@ public class Product {
     @JoinColumn(nullable = false)
     @JsonView({ProductDisplayForBorrower.class})
     User creator;
+
+    @JsonView({ProductDisplayForBorrower.class})
+    String imageName;
 }

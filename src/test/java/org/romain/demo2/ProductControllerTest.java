@@ -19,7 +19,7 @@ public class ProductControllerTest {
     @BeforeEach
     void setUp() {
         productController = new ProductController(
-                new MockProductDao(), new MockSecurityUtils("USER")
+                new MockProductDao(), new MockSecurityUtils("USER"), null
         );
     }
 

@@ -6,7 +6,7 @@ sortWeight = 1000000
 id = '034dd8d4-8818-49c1-be2e-fca4eeaa5630'
 
 [auth]
-type = 'BEARER'
+type = 'NO_AUTH'
 
 [body]
 type = 'JSON'

@@ -16,15 +16,15 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     protected Integer id;
 
-    @NotBlank
+
     @Column(nullable = false)
     protected String firstname;
 
-    @NotBlank
+
     @Column(nullable = false)
     protected String lastname;
 
-    @NotBlank
+
     @Column(nullable = false)
     protected String address;
 

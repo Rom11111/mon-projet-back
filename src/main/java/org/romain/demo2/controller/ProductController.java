@@ -8,14 +8,19 @@ import org.romain.demo2.security.AppUserDetails;
 import org.romain.demo2.security.ISecurityUtils;
 import org.romain.demo2.security.IsAdmin;
 import org.romain.demo2.security.IsClient;
+import org.romain.demo2.service.ServiceFile;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @CrossOrigin
 @RestController
@@ -23,12 +28,14 @@ public class ProductController {
 
     protected ProductDao productDao;
     protected ISecurityUtils securityUtils;
+    protected ServiceFile serviceFile;
 
     //@Autowired //Fait le lien avec la dépendence ProduitDao
     @Autowired
-    public ProductController(ProductDao productDao, ISecurityUtils securityUtils) {
+    public ProductController(ProductDao productDao, ISecurityUtils securityUtils, ServiceFile serviceFile) {
         this.productDao = productDao;
         this.securityUtils = securityUtils;
+        this.serviceFile = serviceFile;
     }
 
     @GetMapping("/product/{id}")
@@ -55,10 +62,15 @@ public class ProductController {
     @PostMapping("/product")
     @IsClient
     public ResponseEntity<Product> save(
-            @RequestBody @Valid Product product,
+            @RequestPart ("product") @Valid Product product,
+            @RequestPart(value = "photo", required=false) MultipartFile photo,
             @AuthenticationPrincipal AppUserDetails userDetails) {
 
+        // Dans le cas d'un héritage
         product.setCreator(userDetails.getUser());
+
+        // dans le cas d'un enum
+        //product.setcreator(userDetails.getUser());
 
 
         if (product.getEtat() == null) {
@@ -69,7 +81,25 @@ public class ProductController {
         }
 
         product.setId(null);
+
+
+        if(photo != null) {
+            try {
+                String date = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss"));
+                String imageName = date + "_" + product.getName() + "_" + UUID.randomUUID() + "_" + photo.getOriginalFilename();
+                serviceFile.uploadToLocalFileSystem(photo, imageName);
+
+                product.setImageName(imageName);
+
+            }catch (Exception e) {
+                return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        }
+
         productDao.save(product);
+
+        product.setCreator((null));
+
         return new ResponseEntity<>(product, HttpStatus.CREATED);
 
 
