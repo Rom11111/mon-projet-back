@@ -1,11 +1,10 @@
 package org.romain.demo2.controller;
 
 import jakarta.validation.Valid;
-import org.romain.demo2.dao.ReservationDao;
-import org.romain.demo2.model.Reservation;
+import org.romain.demo2.dao.RentalDao;
+import org.romain.demo2.model.Rental;
 import org.romain.demo2.security.AppUserDetails;
 import org.romain.demo2.security.ISecurityUtils;
-import org.romain.demo2.security.IsAdmin;
 import org.romain.demo2.security.IsClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -18,60 +17,60 @@ import java.util.Optional;
 
 @CrossOrigin
 @RestController
-@RequestMapping("/reservations")
-public class ReservationController {
+@RequestMapping("/Rentals")
+public class RentalController {
 
-    private final ReservationDao reservationDao;
+    private final RentalDao rentalDao;
     private final ISecurityUtils securityUtils;
 
     @Autowired
-    public ReservationController(ReservationDao reservationDao, ISecurityUtils securityUtils) {
-        this.reservationDao = reservationDao;
+    public RentalController(RentalDao rentalDao, ISecurityUtils securityUtils) {
+        this.rentalDao = rentalDao;
         this.securityUtils = securityUtils;
     }
 
     @GetMapping
     @IsClient
-    public List<Reservation> getAll(@AuthenticationPrincipal AppUserDetails userDetails) {
+    public List<Rental> getAll(@AuthenticationPrincipal AppUserDetails userDetails) {
         String role = securityUtils.getRole(userDetails);
 
         if (role.equals("ROLE_ADMIN")) {
-            return reservationDao.findAll();
+            return rentalDao.findAll();
         } else {
-            return reservationDao.findByUserId(userDetails.getUser().getId());
+            return rentalDao.findByUserId(userDetails.getUser().getId());
         }
     }
 
     @GetMapping("/{id}")
     @IsClient
-    public ResponseEntity<Reservation> getById(
+    public ResponseEntity<Rental> getById(
             @PathVariable int id,
             @AuthenticationPrincipal AppUserDetails userDetails) {
 
-        Optional<Reservation> optionalReservation = reservationDao.findById(id);
-        if (optionalReservation.isEmpty()) {
+        Optional<Rental> optionalRental = rentalDao.findById(id);
+        if (optionalRental.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
 
-        Reservation reservation = optionalReservation.get();
+        Rental rental = optionalRental.get();
 
         if (!securityUtils.getRole(userDetails).equals("ROLE_ADMIN") &&
-                !reservation.getUser().getId().equals(userDetails.getUser().getId())) {
+                !rental.getUser().getId().equals(userDetails.getUser().getId())) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
 
-        return new ResponseEntity<>(reservation, HttpStatus.OK);
+        return new ResponseEntity<>(rental, HttpStatus.OK);
     }
 
     @PostMapping
     @IsClient
-    public ResponseEntity<Reservation> create(
-            @RequestBody @Valid Reservation reservation,
+    public ResponseEntity<Rental> create(
+            @RequestBody @Valid Rental rental,
             @AuthenticationPrincipal AppUserDetails userDetails) {
 
-        reservation.setId(null);
-        reservation.setUser(userDetails.getUser());
-        Reservation saved = reservationDao.save(reservation);
+        rental.setId(null);
+        rental.setUser(userDetails.getUser());
+        Rental saved = rentalDao.save(rental);
         return new ResponseEntity<>(saved, HttpStatus.CREATED);
     }
 
@@ -81,20 +80,20 @@ public class ReservationController {
             @PathVariable int id,
             @AuthenticationPrincipal AppUserDetails userDetails) {
 
-        Optional<Reservation> optional = reservationDao.findById(id);
+        Optional<Rental> optional = rentalDao.findById(id);
         if (optional.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
 
-        Reservation reservation = optional.get();
+        Rental rental = optional.get();
         String role = securityUtils.getRole(userDetails);
 
         if (!role.equals("ROLE_ADMIN") &&
-                !reservation.getUser().getId().equals(userDetails.getUser().getId())) {
+                !rental.getUser().getId().equals(userDetails.getUser().getId())) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
 
-        reservationDao.deleteById(id);
+        rentalDao.deleteById(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
@@ -102,15 +101,15 @@ public class ReservationController {
     @IsClient
     public ResponseEntity<Void> update(
             @PathVariable int id,
-            @RequestBody @Valid Reservation updatedReservation,
+            @RequestBody @Valid Rental updatedRental,
             @AuthenticationPrincipal AppUserDetails userDetails) {
 
-        Optional<Reservation> optional = reservationDao.findById(id);
+        Optional<Rental> optional = rentalDao.findById(id);
         if (optional.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
 
-        Reservation existing = optional.get();
+        Rental existing = optional.get();
         String role = securityUtils.getRole(userDetails);
 
         if (!role.equals("ROLE_ADMIN") &&
@@ -118,9 +117,9 @@ public class ReservationController {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
 
-        updatedReservation.setId(id);
-        updatedReservation.setUser(existing.getUser()); // conserver le user original
-        reservationDao.save(updatedReservation);
+        updatedRental.setId(id);
+        updatedRental.setUser(existing.getUser()); // conserver le user original
+        rentalDao.save(updatedRental);
 
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }

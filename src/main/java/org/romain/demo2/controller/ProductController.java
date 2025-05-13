@@ -1,6 +1,7 @@
 package org.romain.demo2.controller;
 
 import jakarta.validation.Valid;
+import org.romain.demo2.annotation.ValidFile;
 import org.romain.demo2.dao.ProductDao;
 import org.romain.demo2.model.Etat;
 import org.romain.demo2.model.Product;
@@ -10,12 +11,18 @@ import org.romain.demo2.security.IsAdmin;
 import org.romain.demo2.security.IsClient;
 import org.romain.demo2.service.ServiceFile;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.ssl.SslProperties;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -63,7 +70,8 @@ public class ProductController {
     @IsClient
     public ResponseEntity<Product> save(
             @RequestPart ("product") @Valid Product product,
-            @RequestPart(value = "photo", required=false) MultipartFile photo,
+            @RequestPart(value = "photo", required=false)
+            @ValidFile(acceptedTypes = {"image/jpeg", "image/gif"}) MultipartFile photo,
             @AuthenticationPrincipal AppUserDetails userDetails) {
 
         // Dans le cas d'un héritage
@@ -89,7 +97,7 @@ public class ProductController {
                 String imageName = date + "_" + product.getName() + "_" + UUID.randomUUID() + "_" + photo.getOriginalFilename();
                 serviceFile.uploadToLocalFileSystem(photo, imageName);
 
-                product.setImageName(imageName);
+                product.setimageName(imageName);
 
             }catch (Exception e) {
                 return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -155,6 +163,36 @@ public class ProductController {
 
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 
+    }
+
+    @GetMapping("/product/image/{idProduct}")
+    @IsClient
+    public ResponseEntity<byte[]> getImageProduct(@PathVariable int idProduct) {
+
+        Optional<Product> optional = productDao.findById(idProduct);
+
+        if (optional.isPresent()) {
+
+            String imageName = optional.get().getImageName();
+
+            try {
+                byte[] image = ServiceFile.getImageByName(imageName);
+
+                HttpHeaders enTete = new HttpHeaders();
+                String mimeType = Files.probeContentType(new SslProperties.Bundles.Watch.File(imageName).toPath());
+                enTete.setContentType(MediaType.valueOf(mimeType));
+
+                return new ResponseEntity<>(image, enTete, HttpStatus.OK);
+
+            } catch (FileNotFoundException e) {
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            } catch (IOException e) {
+                System.out.println("Le test du mimetype a echoué");
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
+        }
+
+        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
 }

@@ -7,7 +7,6 @@ services:
       - ${PUBLIC_UPLOAD_FOLDER}:/usr/share/nginx/html/images
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
     env_file:
-      - .env
       - .local.env
     environment:
       - PUBLIC_UPLOAD_FOLDER=${PUBLIC_UPLOAD_FOLDER}
