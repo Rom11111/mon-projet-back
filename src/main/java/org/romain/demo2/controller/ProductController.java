@@ -20,6 +20,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -90,14 +91,13 @@ public class ProductController {
 
         product.setId(null);
 
-
         if(photo != null) {
             try {
                 String date = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss"));
                 String imageName = date + "_" + product.getName() + "_" + UUID.randomUUID() + "_" + photo.getOriginalFilename();
-                serviceFile.uploadToLocalFileSystem(photo, imageName);
+                serviceFile.uploadToLocalFileSystem(photo, imageName, false);
 
-                product.setimageName(imageName);
+                product.setImageName(imageName);
 
             }catch (Exception e) {
                 return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -176,10 +176,10 @@ public class ProductController {
             String imageName = optional.get().getImageName();
 
             try {
-                byte[] image = ServiceFile.getImageByName(imageName);
+                byte[] image = serviceFile.getImageByName(imageName);
 
                 HttpHeaders enTete = new HttpHeaders();
-                String mimeType = Files.probeContentType(new SslProperties.Bundles.Watch.File(imageName).toPath());
+                String mimeType = Files.probeContentType(new File(imageName).toPath());
                 enTete.setContentType(MediaType.valueOf(mimeType));
 
                 return new ResponseEntity<>(image, enTete, HttpStatus.OK);
