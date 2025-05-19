@@ -26,7 +26,7 @@ public class Product {
     protected String name;
 
     @Column(length = 15, nullable = false  /* ne peut pas être nul */, unique = true) //force le changement de nom
-    @Length(max = 15, min = 3, message = "longueur entre 3 et 10"/* personalise le msg d'erreur */)
+    @Length(max = 40, min = 3, message = "longueur entre 3 et 10"/* personalise le msg d'erreur */)
     @NotBlank
     protected String code;
 

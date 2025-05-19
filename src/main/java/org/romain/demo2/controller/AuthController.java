@@ -44,7 +44,7 @@ public class AuthController {
     @PostMapping("/signin") // Gère l'inscription
     public ResponseEntity<User> signin(@RequestBody @Validated(User.RegistrationGroup.class) User user) {
 
-        //user.setRole(Role.CLIENT); //Simple utilisateur lors de la création
+        //user.setRole(Role.CLIENT); //Simple User lors de la création
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         String emailVerificationToken = UUID.randomUUID().toString();
 
@@ -77,11 +77,19 @@ public class AuthController {
 
     }
 
-    @PostMapping("validate-email")
-    public String validateEmail(@requestBody EmailValidationDto emailValidationDto) {
+    @PostMapping("/validate-email")
+    public ResponseEntity<User> validateEmail(@RequestBody EmailValidationDto emailValidationDto) {
 
         Optional<User> user = userDao.findByEmail(emailValidationDto.getEmail());
 
+        if (user.get().getEmailVerificationToken().equals(emailValidationDto.getToken())) {
+            user.get().setEmailVerificationToken(null);
+            userDao.save(user.get());
+            return new ResponseEntity<>(user.get(), HttpStatus.OK);
+        }
 
+        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
     }
+
 }
+
