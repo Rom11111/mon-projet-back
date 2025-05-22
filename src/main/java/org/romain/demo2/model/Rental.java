@@ -22,6 +22,10 @@ public class Rental {
     @ManyToOne(optional = false)
     private Product product;
 
+    @NotNull
+    @Column(nullable = false)
+    private Double price;
+
     @ManyToOne
     private User user;
 

@@ -80,7 +80,7 @@ public class AuthController {
     @PostMapping("/validate-email")
     public ResponseEntity<User> validateEmail(@RequestBody EmailValidationDto emailValidationDto) {
 
-        Optional<User> user = userDao.findByEmail(emailValidationDto.getEmail());
+        Optional<User> user = userDao.findByEmailVerificationToken(emailValidationDto.getToken());
 
         if (user.get().getEmailVerificationToken().equals(emailValidationDto.getToken())) {
             user.get().setEmailVerificationToken(null);

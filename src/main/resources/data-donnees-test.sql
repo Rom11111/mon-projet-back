@@ -39,12 +39,11 @@ ALTER TABLE user MODIFY address VARCHAR(255) DEFAULT 'Inconnue';
 
 -- état du matériel
 INSERT INTO etat (id, name)
-VALUES (1, 'neuf'),
-       (2, 'occasion'),
-       (3, 'bon état'),
-       (4, 'reconditionné'),
-       (5, 'très bon état'),
-       (6, 'très ');
+VALUES (1, 'disponible'),
+       (2, 'loué'),
+       (3, 'en retard'),
+       (4, 'en réparation');
+
 
 -- Insérer les étiquettes du matériel
 INSERT INTO label (id, name, color)
