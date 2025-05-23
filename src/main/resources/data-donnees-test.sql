@@ -1,39 +1,39 @@
 INSERT INTO user(firstname, lastname, email, password, role, address, phone)
 VALUES
-    ("John", "Doe", "a@a.com", "$2a$10$Fpc/zCciK4CwnYR6.YFSAuXNjrYDk7brys.s.V/KcoUuLQ6ElY8q2", "ADMIN", "Adresse 1", "0612345678"),
-    ("Jay", "White", "b@b.com", "$2a$10$Fpc/zCciK4CwnYR6.YFSAuXNjrYDk7brys.s.V/KcoUuLQ6ElY8q2", "CLIENT", "Adresse 2", "0623456789"),
-    ("Bob", "Allen", "c@c.com", "$2a$10$Fpc/zCciK4CwnYR6.YFSAuXNjrYDk7brys.s.V/KcoUuLQ6ElY8q2", "TECH", "Adresse 3", "0634567890"),
-    ("Gary", "Cow", "d@d.com", "$2a$10$Fpc/zCciK4CwnYR6.YFSAuXNjrYDk7brys.s.V/KcoUuLQ6ElY8q2", "TECH", "Adresse 4", "0645678901"),
+    ('John', 'Doe', 'a@a.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'ADMIN', 'Adresse 1', '0612345678'),
+    ('Jay', 'White', 'b@b.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'CLIENT', 'Adresse 2', '0623456789'),
+    ('Bob', 'Allen', 'c@c.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'TECH', 'Adresse 3', '0634567890'),
+    ('Gary', 'Cow', 'd@d.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'TECH', 'Adresse 4', '0645678901'),
 
 -- 2 Admin
-    ("Alice", "Dupont", "alice.dupont@a.com", "$2a$10$Fpc/zCciK4CwnYR6.YFSAuXNjrYDk7brys.s.V/KcoUuLQ6ElY8q2", "ADMIN", "1 rue de la Paix, Paris", "0656789012"),
-    ("Marc", "Lemoine", "marc.lemoine@b.com", "$2a$10$Fpc/zCciK4CwnYR6.YFSAuXNjrYDk7brys.s.V/KcoUuLQ6ElY8q2", "ADMIN", "12 avenue des Champs, Paris", "0667890123"),
+    ('Alice', 'Dupont', 'alice.dupont@a.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'ADMIN', '1 rue de la Paix, Paris', '0656789012'),
+    ('Marc', 'Lemoine', 'marc.lemoine@b.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'ADMIN', '12 avenue des Champs, Paris', '0667890123'),
 
 -- 8 Techs
-    ("Léo", "Martin", "leo.martin@c.com", "$2a$10$Fpc/zCciK4CwnYR6.YFSAuXNjrYDk7brys.s.V/KcoUuLQ6ElY8q2", "TECH", "25 rue Victor Hugo, Lyon", "0678901234"),
-    ("Sophie", "Bernard", "sophie.bernard@d.com", "$2a$10$Fpc/zCciK4CwnYR6.YFSAuXNjrYDk7brys.s.V/KcoUuLQ6ElY8q2", "TECH", "10 rue des Fleurs, Marseille", "0689012345"),
-    ("Thomas", "Lemoine", "thomas.lemoine@e.com", "$2a$10$Fpc/zCciK4CwnYR6.YFSAuXNjrYDk7brys.s.V/KcoUuLQ6ElY8q2", "TECH", "5 boulevard de la République, Toulouse", "0690123456"),
-    ("Julie", "Robert", "julie.robert@f.com", "$2a$10$Fpc/zCciK4CwnYR6.YFSAuXNjrYDk7brys.s.V/KcoUuLQ6ElY8q2", "TECH", "22 rue de la Liberté, Lille", "0601234567"),
-    ("Antoine", "Durand", "antoine.durand@g.com", "$2a$10$Fpc/zCciK4CwnYR6.YFSAuXNjrYDk7brys.s.V/KcoUuLQ6ElY8q2", "TECH", "3 place de la Concorde, Paris", "0612345689"),
-    ("Clara", "Moreau", "clara.moreau@h.com", "$2a$10$Fpc/zCciK4CwnYR6.YFSAuXNjrYDk7brys.s.V/KcoUuLQ6ElY8q2", "TECH", "14 rue de l'Opéra, Paris", "0623456798"),
-    ("Louis", "Gauthier", "louis.gauthier@i.com", "$2a$10$Fpc/zCciK4CwnYR6.YFSAuXNjrYDk7brys.s.V/KcoUuLQ6ElY8q2", "TECH", "18 rue du Faubourg, Lyon", "0634567980"),
-    ("Chloé", "Hervé", "chloe.herve@j.com", "$2a$10$Fpc/zCciK4CwnYR6.YFSAuXNjrYDk7brys.s.V/KcoUuLQ6ElY8q2", "TECH", "6 avenue de Verdun, Nantes", "0645679801"),
+    ('Léo', 'Martin', 'leo.martin@c.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'TECH', '25 rue Victor Hugo, Lyon', '0678901234'),
+    ('Sophie', 'Bernard', 'sophie.bernard@d.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'TECH', '10 rue des Fleurs, Marseille', '0689012345'),
+    ('Thomas', 'Lemoine', 'thomas.lemoine@e.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'TECH', '5 boulevard de la République, Toulouse', '0690123456'),
+    ('Julie', 'Robert', 'julie.robert@f.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'TECH', '22 rue de la Liberté, Lille', '0601234567'),
+    ('Antoine', 'Durand', 'antoine.durand@g.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'TECH', '3 place de la Concorde, Paris', '0612345689'),
+    ('Clara', 'Moreau', 'clara.moreau@h.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'TECH', '14 rue de l\'Opéra, Paris', '0623456798'),
+    ('Louis', 'Gauthier', 'louis.gauthier@i.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'TECH', '18 rue du Faubourg, Lyon', '0634567980'),
+    ('Chloé', 'Hervé', 'chloe.herve@j.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'TECH', '6 avenue de Verdun, Nantes', '0645679801'),
 
 -- Clients
-    ("John", "Doe", "john.doe@j.com", "$2a$10$Fpc/zCciK4CwnYR6.YFSAuXNjrYDk7brys.s.V/KcoUuLQ6ElY8q2", "CLIENT", "Client Address 1", "0656798012"),
-    ("Jane", "Smith", "jane.smith@j.com", "$2a$10$Fpc/zCciK4CwnYR6.YFSAuXNjrYDk7brys.s.V/KcoUuLQ6ElY8q2", "CLIENT", "Client Address 2", "0667980123"),
-    ("Michael", "Johnson", "michael.johnson@mj.com", "$2a$10$Fpc/zCciK4CwnYR6.YFSAuXNjrYDk7brys.s.V/KcoUuLQ6ElY8q2", "CLIENT", "Client Address 3", "0679801234"),
-    ("Sarah", "Lee", "sarah.lee@sl.com", "$2a$10$Fpc/zCciK4CwnYR6.YFSAuXNjrYDk7brys.s.V/KcoUuLQ6ElY8q2", "CLIENT", "Client Address 4", "0689012356"),
-    ("Emily", "Davis", "emily.davis@ed.com", "$2a$10$Fpc/zCciK4CwnYR6.YFSAuXNjrYDk7brys.s.V/KcoUuLQ6ElY8q2", "CLIENT", "Client Address 5", "0690123567"),
-    ("Daniel", "Brown", "daniel.brown@db.com", "$2a$10$Fpc/zCciK4CwnYR6.YFSAuXNjrYDk7brys.s.V/KcoUuLQ6ElY8q2", "CLIENT", "Client Address 6", "0601235678"),
-    ("Lisa", "Wilson", "lisa.wilson@lw.com", "$2a$10$Fpc/zCciK4CwnYR6.YFSAuXNjrYDk7brys.s.V/KcoUuLQ6ElY8q2", "CLIENT", "Client Address 7", "0612356789"),
-    ("James", "Miller", "james.miller@jm.com", "$2a$10$Fpc/zCciK4CwnYR6.YFSAuXNjrYDk7brys.s.V/KcoUuLQ6ElY8q2", "CLIENT", "Client Address 8", "0623567890"),
-    ("Elizabeth", "Moore", "elizabeth.moore@em.com", "$2a$10$Fpc/zCciK4CwnYR6.YFSAuXNjrYDk7brys.s.V/KcoUuLQ6ElY8q2", "CLIENT", "Client Address 9", "0635678901"),
-    ("Robert", "Taylor", "robert.taylor@rt.com", "$2a$10$Fpc/zCciK4CwnYR6.YFSAuXNjrYDk7brys.s.V/KcoUuLQ6ElY8q2", "CLIENT", "Client Address 10", "0646789012"),
-    ("Sophia", "Anderson", "sophia.anderson@sa.com", "$2a$10$Fpc/zCciK4CwnYR6.YFSAuXNjrYDk7brys.s.V/KcoUuLQ6ElY8q2", "CLIENT", "Client Address 11", "0657890123"),
-    ("Matthew", "Thomas", "matthew.thomas@mt.com", "$2a$10$Fpc/zCciK4CwnYR6.YFSAuXNjrYDk7brys.s.V/KcoUuLQ6ElY8q2", "CLIENT", "Client Address 12", "0668901234"),
-    ("Olivia", "Jackson", "olivia.jackson@oj.com", "$2a$10$Fpc/zCciK4CwnYR6.YFSAuXNjrYDk7brys.s.V/KcoUuLQ6ElY8q2", "CLIENT", "Client Address 13", "0679012345"),
-    ("William", "White", "william.white@ww.com", "$2a$10$Fpc/zCciK4CwnYR6.YFSAuXNjrYDk7brys.s.V/KcoUuLQ6ElY8q2", "CLIENT", "Client Address 14", "0680123456");
+    ('John', 'Doe', 'john.doe@j.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'CLIENT', 'Client Address 1', '0656798012'),
+    ('Jane', 'Smith', 'jane.smith@j.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'CLIENT', 'Client Address 2', '0667980123'),
+    ('Michael', 'Johnson', 'michael.johnson@mj.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'CLIENT', 'Client Address 3', '0679801234'),
+    ('Sarah', 'Lee', 'sarah.lee@sl.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'CLIENT', 'Client Address 4', '0689012356'),
+    ('Emily', 'Davis', 'emily.davis@ed.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'CLIENT', 'Client Address 5', '0690123567'),
+    ('Daniel', 'Brown', 'daniel.brown@db.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'CLIENT', 'Client Address 6', '0601235678'),
+    ('Lisa', 'Wilson', 'lisa.wilson@lw.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'CLIENT', 'Client Address 7', '0612356789'),
+    ('James', 'Miller', 'james.miller@jm.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'CLIENT', 'Client Address 8', '0623567890'),
+    ('Elizabeth', 'Moore', 'elizabeth.moore@em.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'CLIENT', 'Client Address 9', '0635678901'),
+    ('Robert', 'Taylor', 'robert.taylor@rt.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'CLIENT', 'Client Address 10', '0646789012'),
+    ('Sophia', 'Anderson', 'sophia.anderson@sa.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'CLIENT', 'Client Address 11', '0657890123'),
+    ('Matthew', 'Thomas', 'matthew.thomas@mt.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'CLIENT', 'Client Address 12', '0668901234'),
+    ('Olivia', 'Jackson', 'olivia.jackson@oj.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'CLIENT', 'Client Address 13', '0679012345'),
+    ('William', 'White', 'william.white@ww.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'CLIENT', 'Client Address 14', '0680123456');
 
 
 -- état du matériel

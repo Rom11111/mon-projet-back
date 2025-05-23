@@ -26,19 +26,19 @@ public class User {
     protected Integer id;
 
 
-    @NotBlank( groups = RegistrationGroup.class)
+    @NotBlank( groups = UpdateGroup.class)
     @Column(nullable = false)
     protected String firstname;
 
-    @NotBlank( groups = RegistrationGroup.class)
+    @NotBlank( groups = UpdateGroup.class)
     @Column(nullable = false)
     protected String lastname;
 
-    @NotBlank( groups = RegistrationGroup.class)
+    @NotBlank( groups = UpdateGroup.class)
     @Column(nullable = false)
     protected String address;
 
-    @NotBlank( groups = RegistrationGroup.class)
+    @NotBlank( groups = UpdateGroup.class)
     @Column(nullable = false)
     protected String phone;
 

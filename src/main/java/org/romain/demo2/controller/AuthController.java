@@ -49,6 +49,13 @@ public class AuthController {
         String emailVerificationToken = UUID.randomUUID().toString();
 
         user.setEmailVerificationToken(emailVerificationToken);
+
+        user.setAddress("A renseigner");
+        user.setFirstname("A renseigner");
+        user.setLastname("A renseigner");
+        user.setPhone("A renseigner");
+
+
         userDao.save(user);
 
 
