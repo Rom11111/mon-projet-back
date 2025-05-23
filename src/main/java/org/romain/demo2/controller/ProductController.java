@@ -1,21 +1,34 @@
 package org.romain.demo2.controller;
 
 import jakarta.validation.Valid;
+import org.romain.demo2.annotation.ValidFile;
 import org.romain.demo2.dao.ProductDao;
 import org.romain.demo2.model.Etat;
 import org.romain.demo2.model.Product;
 import org.romain.demo2.security.AppUserDetails;
 import org.romain.demo2.security.ISecurityUtils;
 import org.romain.demo2.security.IsAdmin;
-import org.romain.demo2.security.IsLoaner;
+import org.romain.demo2.security.IsClient;
+import org.romain.demo2.service.ServiceFile;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.ssl.SslProperties;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @CrossOrigin
 @RestController
@@ -23,12 +36,14 @@ public class ProductController {
 
     protected ProductDao productDao;
     protected ISecurityUtils securityUtils;
+    protected ServiceFile serviceFile;
 
     //@Autowired //Fait le lien avec la dépendence ProduitDao
     @Autowired
-    public ProductController(ProductDao productDao, ISecurityUtils securityUtils) {
+    public ProductController(ProductDao productDao, ISecurityUtils securityUtils, ServiceFile serviceFile) {
         this.productDao = productDao;
         this.securityUtils = securityUtils;
+        this.serviceFile = serviceFile;
     }
 
     @GetMapping("/product/{id}")
@@ -46,19 +61,25 @@ public class ProductController {
     }
 
     @GetMapping("/products")
-    @IsLoaner
+    @IsClient
     public List<Product> getAll() {
 
         return productDao.findAll();
     }
 
     @PostMapping("/product")
-    @IsLoaner
+    @IsClient
     public ResponseEntity<Product> save(
-            @RequestBody @Valid Product product,
+            @RequestPart ("product") @Valid Product product,
+            @RequestPart(value = "photo", required=false)
+            @ValidFile(acceptedTypes = {"image/jpeg", "image/gif"}) MultipartFile photo,
             @AuthenticationPrincipal AppUserDetails userDetails) {
 
+        // Dans le cas d'un héritage
         product.setCreator(userDetails.getUser());
+
+        // dans le cas d'un enum
+        //product.setcreator(userDetails.getUser());
 
 
         if (product.getEtat() == null) {
@@ -69,14 +90,31 @@ public class ProductController {
         }
 
         product.setId(null);
+
+        if(photo != null) {
+            try {
+                String date = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss"));
+                String imageName = date + "_" + product.getName() + "_" + UUID.randomUUID() + "_" + photo.getOriginalFilename();
+                serviceFile.uploadToLocalFileSystem(photo, imageName, false);
+
+                product.setImageName(imageName);
+
+            }catch (Exception e) {
+                return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        }
+
         productDao.save(product);
+
+        product.setCreator((null));
+
         return new ResponseEntity<>(product, HttpStatus.CREATED);
 
 
     }
 
     @DeleteMapping("/product/{id}")
-    @IsLoaner
+    @IsClient
     public ResponseEntity<Product> delete(
             @PathVariable int id,
             @AuthenticationPrincipal AppUserDetails userDetails) {
@@ -103,7 +141,7 @@ public class ProductController {
 
 
     @PutMapping("/product/{id}") //mise à jour
-    @IsLoaner
+    @IsClient
     public ResponseEntity<Product> update(
             @PathVariable int id,
             @RequestBody @Valid Product savingProduct) {
@@ -125,6 +163,36 @@ public class ProductController {
 
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 
+    }
+
+    @GetMapping("/product/image/{idProduct}")
+    @IsClient
+    public ResponseEntity<byte[]> getImageProduct(@PathVariable int idProduct) {
+
+        Optional<Product> optional = productDao.findById(idProduct);
+
+        if (optional.isPresent()) {
+
+            String imageName = optional.get().getImageName();
+
+            try {
+                byte[] image = serviceFile.getImageByName(imageName);
+
+                HttpHeaders enTete = new HttpHeaders();
+                String mimeType = Files.probeContentType(new File(imageName).toPath());
+                enTete.setContentType(MediaType.valueOf(mimeType));
+
+                return new ResponseEntity<>(image, enTete, HttpStatus.OK);
+
+            } catch (FileNotFoundException e) {
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            } catch (IOException e) {
+                System.out.println("Le test du mimetype a echoué");
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
+        }
+
+        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
 }

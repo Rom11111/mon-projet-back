@@ -5,6 +5,9 @@ url = 'http://localhost:8080/login'
 sortWeight = 2000000
 id = '35e23120-1a9f-478f-b14f-827918c57510'
 
+[auth]
+type = 'NO_AUTH'
+
 [body]
 type = 'JSON'
 raw = '''

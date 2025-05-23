@@ -1,5 +1,3 @@
-//
-
 package org.romain.demo2.security;
 
 import org.romain.demo2.dao.UserDao;

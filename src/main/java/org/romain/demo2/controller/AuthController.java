@@ -2,6 +2,7 @@ package org.romain.demo2.controller;
 
 import jakarta.validation.Valid;
 import org.romain.demo2.dao.UserDao;
+import org.romain.demo2.dto.EmailValidationDto;
 import org.romain.demo2.model.Role;
 import org.romain.demo2.model.User;
 import org.romain.demo2.security.AppUserDetails;
@@ -13,10 +14,14 @@ import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Optional;
+import java.util.UUID;
 
 @CrossOrigin
 @RestController
@@ -37,11 +42,16 @@ public class AuthController {
 
 
     @PostMapping("/signin") // Gère l'inscription
-    public ResponseEntity<User> signin(@RequestBody @Valid User user) {
+    public ResponseEntity<User> signin(@RequestBody @Validated(User.RegistrationGroup.class) User user) {
 
-        user.setRole(Role.BORROWER); //Simple utilisateur lors de la création
+        //user.setRole(Role.CLIENT); //Simple User lors de la création
         user.setPassword(passwordEncoder.encode(user.getPassword()));
+        String emailVerificationToken = UUID.randomUUID().toString();
+
+        user.setEmailVerificationToken(emailVerificationToken);
         userDao.save(user);
+
+
 
         //On masque le mot de passe
         user.setPassword(null);
@@ -67,4 +77,19 @@ public class AuthController {
 
     }
 
+    @PostMapping("/validate-email")
+    public ResponseEntity<User> validateEmail(@RequestBody EmailValidationDto emailValidationDto) {
+
+        Optional<User> user = userDao.findByEmail(emailValidationDto.getEmail());
+
+        if (user.get().getEmailVerificationToken().equals(emailValidationDto.getToken())) {
+            user.get().setEmailVerificationToken(null);
+            userDao.save(user.get());
+            return new ResponseEntity<>(user.get(), HttpStatus.OK);
+        }
+
+        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+    }
+
 }
+

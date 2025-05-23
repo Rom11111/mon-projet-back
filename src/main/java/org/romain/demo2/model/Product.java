@@ -26,7 +26,7 @@ public class Product {
     protected String name;
 
     @Column(length = 15, nullable = false  /* ne peut pas être nul */, unique = true) //force le changement de nom
-    @Length(max = 15, min = 3, message = "longueur entre 3 et 10"/* personalise le msg d'erreur */)
+    @Length(max = 40, min = 3, message = "longueur entre 3 et 10"/* personalise le msg d'erreur */)
     @NotBlank
     protected String code;
 
@@ -41,7 +41,7 @@ public class Product {
     @ManyToMany
     @JoinTable(
             name = "product_label", // nom de la table de jointure
-            joinColumns = @JoinColumn(name = "product_id"), // permet de modifier la colonne Produit(je suis dans son entité)
+            joinColumns = @JoinColumn(name = "product_id"), // permet de modifier la colonne Product(je suis dans son entité)
             inverseJoinColumns = @JoinColumn(name = "label_id")
 
     )
@@ -51,4 +51,14 @@ public class Product {
     @JoinColumn(nullable = false)
     @JsonView({ProductDisplayForBorrower.class})
     User creator;
+
+    @ManyToOne
+    @JoinColumn(name = "category_id") // <-- colonne dans la table product
+    private Category category;
+
+
+    @JsonView({ProductDisplayForBorrower.class})
+    String imageName;
+
+
 }

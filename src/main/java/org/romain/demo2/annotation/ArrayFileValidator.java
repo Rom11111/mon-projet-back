@@ -4,11 +4,10 @@ import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.util.Arrays;
 import java.util.List;
 
-public class ArrayFileValidator implements ConstraintValidator<ValidFile, MultipartFile[]> {
+public class ArrayFileValidator implements ConstraintValidator<org.romain.demo2.annotation.ValidFile, MultipartFile[]> {
 
     private List<String> acceptedTypes;
     private long maxSize;

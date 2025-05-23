@@ -15,15 +15,14 @@ public class FileValidationUtil {
         String contentType = file.getContentType();
         if (contentType == null || !acceptedTypes.contains(contentType)) {
             context.buildConstraintViolationWithTemplate(
-                            "Extension de fichier invalide : '" + contentType + "'. acceptés : '" +
-                                    String.join("', '", acceptedTypes) + "'")
+                    "Extension de fichier invalide : '" + contentType + "'. acceptés : '" +
+                            String.join("', '", acceptedTypes) + "'")
                     .addConstraintViolation()
                     .disableDefaultConstraintViolation();
             return false;
         }
         return true;
     }
-
     public static boolean isValidFileSize(MultipartFile file, long maxSize, ConstraintValidatorContext context) {
         if (maxSize > 0 && file.getSize() > maxSize) {
             context.buildConstraintViolationWithTemplate("Taille de fichier trop grande : " + file.getSize() + ", max : " + maxSize)
