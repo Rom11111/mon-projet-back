@@ -48,13 +48,17 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain configureAuthentification(HttpSecurity http) throws Exception {
         return http
-                .csrf(c -> c.disable()) // désactive la protection de la faille CSRF
-                .cors(c -> c.configurationSource(corsConfigurationSource())) // défini les règles pour les Cors policy
-                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // indique qu'il n'y a pas de session
+                .csrf(c -> c.disable())
+                .cors(c -> c.configurationSource(corsConfigurationSource()))
+                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/login").permitAll() // 👈 Ajout ici
+                        .anyRequest().authenticated()
+                )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
-
     }
+
 
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();

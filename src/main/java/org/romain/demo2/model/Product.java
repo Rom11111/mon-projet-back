@@ -7,7 +7,7 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.validator.constraints.Length;
-import org.romain.demo2.view.ProductDisplayForBorrower;
+import org.romain.demo2.view.ProductDisplayForClient;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,7 +49,7 @@ public class Product {
 
     @ManyToOne
     @JoinColumn(nullable = false)
-    @JsonView({ProductDisplayForBorrower.class})
+    @JsonView({ProductDisplayForClient.class})
     User creator;
 
     @ManyToOne
@@ -57,7 +57,7 @@ public class Product {
     private Category category;
 
 
-    @JsonView({ProductDisplayForBorrower.class})
+    @JsonView({ProductDisplayForClient.class})
     String imageName;
 
 

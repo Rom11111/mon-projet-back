@@ -6,9 +6,6 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 
-
-
-
 @Getter
 @Setter
 @Entity
@@ -25,7 +22,6 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     protected Integer id;
 
-
     @NotBlank( groups = UpdateGroup.class)
     @Column(nullable = false)
     protected String firstname;
@@ -36,7 +32,11 @@ public class User {
 
     @NotBlank( groups = UpdateGroup.class)
     @Column(nullable = false)
-    protected String address;
+    protected String company;
+
+    @NotBlank( groups = UpdateGroup.class)
+    @Column(nullable = false)
+    protected String companyAdress;
 
     @NotBlank( groups = UpdateGroup.class)
     @Column(nullable = false)

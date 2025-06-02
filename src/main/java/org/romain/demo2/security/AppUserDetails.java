@@ -37,7 +37,7 @@ public class AppUserDetails implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return user.getEmailVerificationToken() != null;
+        return user.getEmailVerificationToken() == null;
     }
 
 

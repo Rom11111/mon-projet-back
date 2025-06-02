@@ -50,7 +50,8 @@ public class AuthController {
 
         user.setEmailVerificationToken(emailVerificationToken);
 
-        user.setAddress("A renseigner");
+        user.setCompany("A renseigner");
+        user.setCompanyAdress("A renseigner");
         user.setFirstname("A renseigner");
         user.setLastname("A renseigner");
         user.setPhone("A renseigner");
@@ -66,7 +67,7 @@ public class AuthController {
     }
 
     @PostMapping("/login") // Gère la connection
-    public ResponseEntity<String> login(@RequestBody @Valid User user) {
+    public ResponseEntity<String> login(@RequestBody User user) {
 
         try {
             AppUserDetails userDetails = (AppUserDetails) authenticationProvider.authenticate(
