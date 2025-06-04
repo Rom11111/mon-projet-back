@@ -56,6 +56,8 @@ public class Product {
     @JoinColumn(name = "category_id") // <-- colonne dans la table product
     private Category category;
 
+    private String location;
+
 
     @JsonView({ProductDisplayForClient.class})
     String imageName;

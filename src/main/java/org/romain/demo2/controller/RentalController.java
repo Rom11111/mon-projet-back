@@ -6,9 +6,11 @@ import org.romain.demo2.model.Rental;
 import org.romain.demo2.security.AppUserDetails;
 import org.romain.demo2.security.ISecurityUtils;
 import org.romain.demo2.security.IsClient;
+import org.romain.demo2.security.IsTech;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,7 +19,9 @@ import java.util.Optional;
 
 @CrossOrigin
 @RestController
-@RequestMapping("/Rentals")
+@RequestMapping("/rentals")
+// restreint l'accès à l'ensemble du contrôleur
+@IsTech
 public class RentalController {
 
     private final RentalDao rentalDao;
@@ -30,7 +34,6 @@ public class RentalController {
     }
 
     @GetMapping
-    @IsClient
     public List<Rental> getAll(@AuthenticationPrincipal AppUserDetails userDetails) {
         String role = securityUtils.getRole(userDetails);
 
@@ -42,7 +45,6 @@ public class RentalController {
     }
 
     @GetMapping("/{id}")
-    @IsClient
     public ResponseEntity<Rental> getById(
             @PathVariable int id,
             @AuthenticationPrincipal AppUserDetails userDetails) {
@@ -63,7 +65,6 @@ public class RentalController {
     }
 
     @PostMapping
-    @IsClient
     public ResponseEntity<Rental> create(
             @RequestBody @Valid Rental rental,
             @AuthenticationPrincipal AppUserDetails userDetails) {
@@ -75,7 +76,6 @@ public class RentalController {
     }
 
     @DeleteMapping("/{id}")
-    @IsClient
     public ResponseEntity<Void> delete(
             @PathVariable int id,
             @AuthenticationPrincipal AppUserDetails userDetails) {
@@ -98,7 +98,6 @@ public class RentalController {
     }
 
     @PutMapping("/{id}")
-    @IsClient
     public ResponseEntity<Void> update(
             @PathVariable int id,
             @RequestBody @Valid Rental updatedRental,

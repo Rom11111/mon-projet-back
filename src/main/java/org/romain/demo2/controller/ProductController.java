@@ -123,7 +123,7 @@ public class ProductController {
     }
 
     @DeleteMapping("/product/{id}")
-    @IsClient
+    @IsTech
     public ResponseEntity<Product> delete(
             @PathVariable int id,
             @AuthenticationPrincipal AppUserDetails userDetails) {
