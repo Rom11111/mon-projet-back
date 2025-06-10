@@ -1,3 +1,5 @@
+//fournit, sans effort et sans code sac de nœuds, toute la couche d’accès aux
+// données nécessaires pour l’entité `Product`
 package org.romain.demo2.dao;
 
 import org.romain.demo2.model.Product;

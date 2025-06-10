@@ -1,15 +1,15 @@
 package org.romain.demo2.controller;
 
+import com.fasterxml.jackson.annotation.JsonView;
 import jakarta.validation.Valid;
 import org.romain.demo2.annotation.ValidFile;
 import org.romain.demo2.dao.ProductDao;
 import org.romain.demo2.model.Etat;
 import org.romain.demo2.model.Product;
-import org.romain.demo2.security.AppUserDetails;
-import org.romain.demo2.security.ISecurityUtils;
-import org.romain.demo2.security.IsAdmin;
-import org.romain.demo2.security.IsClient;
+import org.romain.demo2.security.*;
 import org.romain.demo2.service.ServiceFile;
+import org.romain.demo2.view.ProductDisplayForClient;
+import org.romain.demo2.view.ProductDisplayForTech;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.ssl.SslProperties;
 import org.springframework.http.HttpHeaders;
@@ -46,8 +46,17 @@ public class ProductController {
         this.serviceFile = serviceFile;
     }
 
+    @GetMapping("/admin/products")
+    @IsTech
+    @JsonView(ProductDisplayForTech.class)
+    public List<Product> getAllAsTech() {
+
+        return productDao.findAll();
+    }
+
     @GetMapping("/product/{id}")
-    @IsAdmin
+    @IsClient
+    @JsonView(ProductDisplayForClient.class)
     public ResponseEntity<Product> /* être plus precis sur le retour de la methode */ get(@PathVariable int id) {
 
         Optional<Product> productOptional = productDao.findById(id);
@@ -110,11 +119,10 @@ public class ProductController {
 
         return new ResponseEntity<>(product, HttpStatus.CREATED);
 
-
     }
 
     @DeleteMapping("/product/{id}")
-    @IsClient
+    @IsTech
     public ResponseEntity<Product> delete(
             @PathVariable int id,
             @AuthenticationPrincipal AppUserDetails userDetails) {

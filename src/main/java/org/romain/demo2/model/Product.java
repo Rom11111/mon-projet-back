@@ -3,11 +3,12 @@ package org.romain.demo2.model;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.validator.constraints.Length;
-import org.romain.demo2.view.ProductDisplayForBorrower;
+import org.romain.demo2.view.ProductDisplayForClient;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,6 +23,7 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.IDENTITY) //Stratégie à appliquer
     protected Integer id;
 
+    @NotBlank
     @Column(nullable = false)
     protected String name;
 
@@ -33,6 +35,7 @@ public class Product {
     @Column(columnDefinition = "TEXT") //pas de limite de caractères
     protected String description;
 
+    @DecimalMin("0.1")
     protected float price; // "f" prix peut être de 0 et "F" valeur par défaut null
 
     @ManyToOne
@@ -49,15 +52,17 @@ public class Product {
 
     @ManyToOne
     @JoinColumn(nullable = false)
-    @JsonView({ProductDisplayForBorrower.class})
+    @JsonView({ProductDisplayForClient.class})
     User creator;
 
     @ManyToOne
     @JoinColumn(name = "category_id") // <-- colonne dans la table product
     private Category category;
 
+    private String location;
 
-    @JsonView({ProductDisplayForBorrower.class})
+
+    @JsonView({ProductDisplayForClient.class})
     String imageName;
 
 

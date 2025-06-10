@@ -1,13 +1,12 @@
 package org.romain.demo2.model;
 
+import com.fasterxml.jackson.annotation.JsonView;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
-
-
-
+import org.romain.demo2.view.ProductDisplayForClient;
 
 @Getter
 @Setter
@@ -25,20 +24,24 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     protected Integer id;
 
-
-    @NotBlank( groups = RegistrationGroup.class)
+    @NotBlank( groups = UpdateGroup.class)
     @Column(nullable = false)
     protected String firstname;
 
-    @NotBlank( groups = RegistrationGroup.class)
+    @NotBlank( groups = UpdateGroup.class)
     @Column(nullable = false)
+    @JsonView({ProductDisplayForClient.class})
     protected String lastname;
 
-    @NotBlank( groups = RegistrationGroup.class)
+    @NotBlank( groups = UpdateGroup.class)
     @Column(nullable = false)
-    protected String address;
+    protected String company;
 
-    @NotBlank( groups = RegistrationGroup.class)
+    @NotBlank( groups = UpdateGroup.class)
+    @Column(nullable = false)
+    protected String companyAdress;
+
+    @NotBlank( groups = UpdateGroup.class)
     @Column(nullable = false)
     protected String phone;
 
