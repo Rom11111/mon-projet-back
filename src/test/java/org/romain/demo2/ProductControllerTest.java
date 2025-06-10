@@ -41,8 +41,8 @@ public class ProductControllerTest {
         fakeUser.setId(1);
         AppUserDetails userDetails = new AppUserDetails(fakeUser);
 
-        ResponseEntity<Product> response = productController.delete(2, userDetails);
-        Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        ResponseEntity<Product> response = productController.delete(1, userDetails);
+        Assertions.assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
     }
 
     @Test
@@ -51,7 +51,7 @@ public class ProductControllerTest {
         fakeUser.setId(2);
         AppUserDetails userDetails = new AppUserDetails(fakeUser);
 
-        ResponseEntity<Product> response = productController.delete(2, userDetails);
+        ResponseEntity<Product> response = productController.delete(1, userDetails);
         Assertions.assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
     }
 
@@ -62,7 +62,7 @@ public class ProductControllerTest {
         AppUserDetails userDetails = new AppUserDetails(fakeUser);
 
 
-        ResponseEntity<Product> response = productController.delete(2, userDetails);
+        ResponseEntity<Product> response = productController.delete(1, userDetails);
         Assertions.assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
     }
 }

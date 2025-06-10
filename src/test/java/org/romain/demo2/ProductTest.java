@@ -42,7 +42,7 @@ public class ProductTest {
         productTest.setPrice(10);
         Set<ConstraintViolation<Object>> violations = validator.validate(productTest);
 
-        boolean notBlankViolationExist = constraintExist(
+        boolean notBlankViolationExist = TestUtils.constraintExist(
                 violations, "name", "NotBlank");
 
         assertTrue(notBlankViolationExist);
@@ -53,10 +53,10 @@ public class ProductTest {
         Product productTest = new Product();
 
         assertTrue(
-                constraintExist(
+                TestUtils.constraintExist(
                         validator.validate(productTest),
                         "code",
-                        "jakarta.validation.constraints.NotBlank"));
+                        "NotBlank"));
     }
 
     @Test
@@ -65,18 +65,11 @@ public class ProductTest {
         productTest.setCode("a");
 
         assertTrue(
-                constraintExist(
+                TestUtils.constraintExist(
                         validator.validate(productTest),
                         "code",
-                        "org.hibernate.validator.constraints.Length"));
+                        "Length"));
 
-    }
-
-    private boolean constraintExist(Set<ConstraintViolation<Object>> violations, String fieldName, String constraintName) {
-        return violations.stream()
-                .filter(v -> v.getPropertyPath().toString().equals(fieldName))
-                .map(v -> v.getConstraintDescriptor().getAnnotation().annotationType().getName())
-                .anyMatch(s -> s.equals(constraintName));
     }
 
     @Test

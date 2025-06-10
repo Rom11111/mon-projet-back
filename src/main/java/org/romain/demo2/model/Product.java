@@ -3,6 +3,7 @@ package org.romain.demo2.model;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
@@ -22,6 +23,7 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.IDENTITY) //Stratégie à appliquer
     protected Integer id;
 
+    @NotBlank
     @Column(nullable = false)
     protected String name;
 
@@ -33,6 +35,7 @@ public class Product {
     @Column(columnDefinition = "TEXT") //pas de limite de caractères
     protected String description;
 
+    @DecimalMin("0.1")
     protected float price; // "f" prix peut être de 0 et "F" valeur par défaut null
 
     @ManyToOne

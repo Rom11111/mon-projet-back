@@ -6,6 +6,8 @@ import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
@@ -18,7 +20,14 @@ import java.util.TimeZone;
 // Annotation principale indiquant que cette classe est une application Spring Boot.
 // Elle combine plusieurs annotations : @Configuration, @EnableAutoConfiguration et @ComponentScan.
 @SpringBootApplication
-public class Demo2Application {
+public class Demo2Application extends SpringBootServletInitializer {
+
+    //Pour rendre compatible notre application avec tomcat 9 nous devons ajouter un héritage sur la classe
+    //de l’application, ainsi qu’une surcharge d’une méthode
+    @Override
+    protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
+        return application.sources(Demo2Application.class);
+    }
 
     @Value("${email.host}")
     String emailHost;
