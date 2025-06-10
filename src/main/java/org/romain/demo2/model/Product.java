@@ -3,6 +3,7 @@ package org.romain.demo2.model;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
@@ -33,6 +34,7 @@ public class Product {
     @Column(columnDefinition = "TEXT") //pas de limite de caractères
     protected String description;
 
+    @DecimalMin("0.1")
     protected float price; // "f" prix peut être de 0 et "F" valeur par défaut null
 
     @ManyToOne
@@ -56,6 +58,7 @@ public class Product {
     @JoinColumn(name = "category_id") // <-- colonne dans la table product
     private Category category;
 
+    private String location;
 
     @JsonView({ProductDisplayForClient.class})
     String imageName;

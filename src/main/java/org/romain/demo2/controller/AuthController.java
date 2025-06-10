@@ -49,6 +49,14 @@ public class AuthController {
         String emailVerificationToken = UUID.randomUUID().toString();
 
         user.setEmailVerificationToken(emailVerificationToken);
+
+        user.setCompany("A renseigner");
+        user.setCompanyAdress("A renseigner");
+        user.setFirstname("A renseigner");
+        user.setLastname("A renseigner");
+        user.setPhone("A renseigner");
+
+
         userDao.save(user);
 
 
@@ -59,7 +67,7 @@ public class AuthController {
     }
 
     @PostMapping("/login") // Gère la connection
-    public ResponseEntity<String> login(@RequestBody @Valid User user) {
+    public ResponseEntity<String> login(@RequestBody User user) {
 
         try {
             AppUserDetails userDetails = (AppUserDetails) authenticationProvider.authenticate(

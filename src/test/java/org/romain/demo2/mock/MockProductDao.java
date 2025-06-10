@@ -116,7 +116,7 @@ public class MockProductDao implements ProductDao {
         fakeProduct.setCreator(FakeUser);
 
         if (integer == 1) {
-            return Optional.empty();
+            return Optional.of(fakeProduct);
         }
         return Optional.empty();
     }
