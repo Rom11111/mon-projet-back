@@ -47,12 +47,12 @@ public class Product {
             inverseJoinColumns = @JoinColumn(name = "label_id")
 
     )
-    protected List<Label> labelList = new ArrayList<>();
+//    protected List<Label> labelList = new ArrayList<>();
 
     @ManyToOne
     @JoinColumn(nullable = false)
     @JsonView({ProductDisplayForClient.class})
-    User creator;
+    private User creator;
 
     @ManyToOne
     @JoinColumn(name = "category_id") // <-- colonne dans la table product

@@ -14,12 +14,8 @@ import org.romain.demo2.view.ProductDisplayForClient;
 public class User {
 
     // voir page
-    public interface RegistrationGroup {
-
-    }
-    public interface UpdateGroup {
-
-    }
+    public interface RegistrationGroup { }
+    public interface UpdateGroup {}
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     protected Integer id;
@@ -59,6 +55,9 @@ public class User {
     @Column(columnDefinition = "ENUM('CLIENT','TECH', 'ADMIN')")
     protected Role role;
     //protected boolean admin; // si admin est vrai c'est un admin, si faux ce n'est pas un admin
+
+    @Column
+    private String photoUrl;
 
     protected String emailVerificationToken;
 }

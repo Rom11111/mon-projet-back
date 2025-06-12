@@ -30,7 +30,6 @@ public class Rental {
     @ManyToOne(optional = false)
     private Product product;
 
-
     @NotNull
     @Column(nullable = false)
     private Double price;
@@ -58,6 +57,25 @@ public class Rental {
     @Column
     private boolean confirmed = false;
 
+    /**
+     * Commentaires ou notes sur la location.
+     */
+    @Column(columnDefinition = "TEXT")
+    private String comments;
+
+    /**
+     * Statut de retour du produit.
+     * Peut être null (pas encore retourné), "good" (bon état), "damaged" (endommagé), etc.
+     */
+    @Column
+    private String returnStatus;
+
+    /**
+     * Date et heure de retour effectif du produit.
+     */
+    @Column
+    private LocalDateTime actualReturnDate;
+
     // Méthodes utilitaires
 
     /**
@@ -70,5 +88,14 @@ public class Rental {
             return true;
         }
         return expirationDate.isAfter(LocalDateTime.now());
+    }
+
+    /**
+     * Vérifie si la location est en retard.
+     * @return true si la location est en retard
+     */
+    @Transient
+    public boolean isOverdue() {
+        return isActive() == false && actualReturnDate == null;
     }
 }

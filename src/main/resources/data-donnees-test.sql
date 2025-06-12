@@ -3,7 +3,6 @@ VALUES
     ('John', 'Doe', 'Locatech', 'a@a.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'ADMIN', 'Adresse 1', '0612345678'),
     ('Jay', 'White', 'Locatech', 'b@b.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'CLIENT', 'Adresse 2', '0623456789'),
     ('Bob', 'Allen', 'Locatech','c@c.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'TECH', 'Adresse 3', '0634567890'),
-    ('Gary', 'Cow', 'Locatech','d@d.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'TECH', 'Adresse 4', '0645678901'),
 
 -- 2 Admin
     ('Alice', 'Dupont', 'Locatech', 'alice.dupont@a.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'ADMIN', '1 rue de la Paix, Paris', '0656789012'),
@@ -42,16 +41,7 @@ VALUES (1, 'disponible'),
        (3, 'en retard'),
        (4, 'en réparation');
 
-
--- Insérer les étiquettes du matériel
-INSERT INTO label (id, name, color)
-VALUES (1, 'Neuf', '#77FF77'),
-       (2, 'Matériel haut de gamme', 'yellow'),
-       (3, 'Reconditionné premium', 'grey'),
-       (4, 'Location longue durée', 'darkred'),
-       (5, 'Soldes', 'red');
-
-
+-- catégories des équipements
 INSERT INTO category (id, name)
 VALUES (1, 'Ordinateurs portables'),
        (2, 'Tablettes'),
@@ -178,14 +168,3 @@ VALUES ('MacBook Pro M2', 'mbp-m2', 'Ordinateur portable Apple 16 pouces', 2499,
 
 
 
-
--- étiquettes matériels
-INSERT INTO product_label (product_id, label_id)
-VALUES (1, 1), -- MacBook Pro M2 en promotion
-       (2, 2), -- Dell XPS 15 haut de gamme
-       (3, 3), -- ThinkPad X1 Carbon reconditionné premium
-       (4, 4), -- iPad Pro pour location longue durée
-       (5, 5), -- Surface Laptop Studio en soldes
-       (6, 3), -- HP Spectre x360 reconditionné premium
-       (7, 1), -- Mac Mini en promotion
-       (8, 2); -- ASUS ROG Zephyrus haut de gamme
