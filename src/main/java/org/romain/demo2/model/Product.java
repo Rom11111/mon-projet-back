@@ -23,7 +23,9 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.IDENTITY) //Stratégie à appliquer
     protected Integer id;
 
+
     @Column(nullable = false)
+    @NotBlank
     protected String name;
 
     @Column(length = 15, nullable = false  /* ne peut pas être nul */, unique = true) //force le changement de nom

@@ -49,7 +49,7 @@ public class ProductTest {
     }
 
     @Test
-    void createProduitWithoutCode_shouldNotBeValid() {
+    void createProductWithoutCode_shouldNotBeValid() {
         Product productTest = new Product();
 
         assertTrue(
