@@ -39,6 +39,7 @@ public class AppUserDetails implements UserDetails {
     public boolean isEnabled() {
         return user.getEmailVerificationToken() == null;
     }
+//    #TODO
 
 
 

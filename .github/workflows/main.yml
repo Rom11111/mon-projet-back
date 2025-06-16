@@ -1,0 +1,62 @@
+name: Build and Push Docker Image  # Nom du workflow
+
+on:
+  push:
+    branches:
+      - main  # Déclenche le workflow uniquement sur les pushes vers la branche "main"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest  # Tâche exécutée sur une machine virtuelle avec l'image Ubuntu la plus récente
+
+    steps:
+      # Étape 1 : Récupération du code source
+      - name: Checkout code
+        uses: actions/checkout@v2  # Action standard pour cloner le code du repository GitHub
+      
+      # Étape 2 : Chargement du fichier .env
+      # Cette étape charge des variables d'environnement depuis un fichier local .env
+      - name: Load .env file
+        run: |
+          set -a  # Active l'exportation automatique des variables d'environnement
+          source .env  # Charge les variables depuis le fichier .env
+          set +a  # Désactive l'exportation automatique
+          echo "APP_NAME=${APP_NAME}" >> $GITHUB_ENV  # Enregistre la variable APP_NAME dans l'environnement GitHub
+
+      # Étape 3 : Configuration de Java avec une version spécifique
+      - name: Set up JDK 17
+        uses: actions/setup-java@v2  # Configure Java pour le runner
+        with:
+          java-version: '17'  # Spécifie l'utilisation de Java 17
+          distribution: 'adopt'  # Indique quelle distribution de Java est utilisée (AdoptOpenJDK)
+
+      # Étape 4 : Mise à jour du secret JWT dans le fichier application.properties
+      # Remplace une valeur placeholder (${JWT_SECRET}) par la valeur stockée dans les secrets
+      - name: Update JWT Secret in application.properties
+        run: sed -i 's/${JWT_SECRET}/${{ secrets.JWT_SECRET }}/' src/main/resources/application.properties
+
+      # Étape 5 : Construction du projet avec Maven
+      # Cette étape nettoie et construit le projet Maven
+      - name: Build with Maven
+        run: mvn clean package  # Exécute les commandes Maven pour nettoyer et empaqueter
+
+      # Étape 6 : Extraction de la version du projet depuis le pom.xml
+      # La version du projet est lue et elle est sauvegardée dans l'environnement GitHub
+      - name: Extract version from pom.xml
+        id: extract_version  # Donne un identifiant à cette étape afin de pouvoir réutiliser ses résultats
+        run: echo "VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_ENV
+
+      # Étape 7 : Connexion à Docker Hub
+      # Authentification avec les identifiants Docker fournis dans les secrets du repository
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}  # Nom d'utilisateur pour Docker Hub
+          password: ${{ secrets.DOCKER_PASSWORD }}  # Mot de passe pour Docker Hub
+
+      # Étape 8 : Construction et publication de l'image Docker
+      # Cette étape construit une image Docker et la pousse sur le registre Docker Hub
+      - name: Build and push Docker image
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/${{ env.APP_NAME }}:${{ env.VERSION }} .  # Construction de l'image
+          docker push ${{ secrets.DOCKER_USERNAME }}/${{ env.APP_NAME }}:${{ env.VERSION }}  # Publication de l'image sur Docker Hub

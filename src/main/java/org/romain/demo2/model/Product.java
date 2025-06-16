@@ -23,8 +23,9 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.IDENTITY) //Stratégie à appliquer
     protected Integer id;
 
-    @NotBlank
+
     @Column(nullable = false)
+    @NotBlank
     protected String name;
 
     @Column(length = 15, nullable = false  /* ne peut pas être nul */, unique = true) //force le changement de nom
@@ -48,19 +49,18 @@ public class Product {
             inverseJoinColumns = @JoinColumn(name = "label_id")
 
     )
-    protected List<Label> labelList = new ArrayList<>();
+//    protected List<Label> labelList = new ArrayList<>();
 
     @ManyToOne
     @JoinColumn(nullable = false)
     @JsonView({ProductDisplayForClient.class})
-    User creator;
+    private User creator;
 
     @ManyToOne
     @JoinColumn(name = "category_id") // <-- colonne dans la table product
     private Category category;
 
     private String location;
-
 
     @JsonView({ProductDisplayForClient.class})
     String imageName;

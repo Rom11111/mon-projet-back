@@ -11,4 +11,6 @@ import java.util.Optional;
 public interface UserDao extends JpaRepository<User, Integer> {
 
     Optional<User> findByEmail(String email); //Permet de récupérer un User par son Email
+    Optional<User> findByEmailVerificationToken(String token);
+
 }

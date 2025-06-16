@@ -28,7 +28,7 @@ public class SecurityUtils implements ISecurityUtils {
         return Jwts.builder()
                 .setSubject(userDetails.getUsername())
                 .addClaims(Map.of("role", getRole(userDetails)))
-                .signWith(SignatureAlgorithm.HS256, "jwtSecret")
+                .signWith(SignatureAlgorithm.HS256, jwtSecret)
                 .compact();
 
 
@@ -37,7 +37,7 @@ public class SecurityUtils implements ISecurityUtils {
     @Override
     public String getSubjectFromJwt(String jwt) {
         return Jwts.parser()
-                .setSigningKey("jwtSecret") // jwtsecret à trouver en variable d'environnement.
+                .setSigningKey(jwtSecret) // jwtsecret à trouver en variable d'environnement.
                 .parseClaimsJws(jwt)
                 .getBody()
                 .getSubject();
