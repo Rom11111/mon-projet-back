@@ -28,6 +28,7 @@ public class SecurityUtils implements ISecurityUtils {
         return Jwts.builder()
                 .setSubject(userDetails.getUsername())
                 .addClaims(Map.of("role", getRole(userDetails)))
+                .addClaims(Map.of("userId", userDetails.getUserId()))
                 .signWith(SignatureAlgorithm.HS256, jwtSecret)
                 .compact();
 
