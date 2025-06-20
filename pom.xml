@@ -12,7 +12,7 @@
     <artifactId>demo</artifactId>
     <version>0.0.5</version>
     <name>demo</name>
-    <description>Demo project for Spring Boot</description>
+    <description>Project backend for AltaTech</description>
     <url/>
     <licenses>
         <license/>
@@ -94,6 +94,12 @@
     <build>
         <finalName>${final.jar.name}</finalName>
         <plugins>
+            <!-- Change le nom pour utliser <finalName> -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.4.2</version>
+            </plugin>
 
             <!-- plugin permettant de ne pas effectuer les tests unitaires -->
             <plugin>
@@ -112,12 +118,7 @@
                 </configuration>
             </plugin>
 
-            <!-- Change le nom pour utliser <finalName> -->
-            <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-jar-plugin</artifactId>
-            <version>3.4.2</version>
-            </plugin>
+
 
             <plugin>
 

@@ -25,6 +25,10 @@ public class AppUserDetails implements UserDetails {
 
     }
 
+    public Integer getUserId() {
+        return user.getId();
+    }
+
     @Override
     public String getPassword() {
         return user.getPassword();

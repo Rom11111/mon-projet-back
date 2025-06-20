@@ -1,8 +1,10 @@
 package org.romain.demo2.controller;
 
 import org.romain.demo2.dao.UserDao;
+import org.romain.demo2.model.Rental;
 import org.romain.demo2.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,5 +22,10 @@ public class UserController {
         return userDao.findAll();
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<User> getById(
+            @PathVariable int id) {
+        return userDao.getUserById(id);
+    }
 
 }

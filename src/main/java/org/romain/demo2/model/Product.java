@@ -42,25 +42,25 @@ public class Product {
     @ManyToOne
     protected Etat etat;
 
-    @ManyToMany
-    @JoinTable(
-            name = "product_label", // nom de la table de jointure
-            joinColumns = @JoinColumn(name = "product_id"), // permet de modifier la colonne Product(je suis dans son entité)
-            inverseJoinColumns = @JoinColumn(name = "label_id")
-
-    )
+//    @ManyToMany
+//    @JoinTable(
+//            name = "product_label", // nom de la table de jointure
+//            joinColumns = @JoinColumn(name = "product_id"), // permet de modifier la colonne Product(je suis dans son entité)
+//            inverseJoinColumns = @JoinColumn(name = "label_id")
+//
+//    )
 //    protected List<Label> labelList = new ArrayList<>();
 
     @ManyToOne
-    @JoinColumn(nullable = false)
+    @JoinColumn(name = "creator_id", nullable = false)
     @JsonView({ProductDisplayForClient.class})
-    private User creator;
+    protected User creator;
 
     @ManyToOne
     @JoinColumn(name = "category_id") // <-- colonne dans la table product
-    private Category category;
+    protected Category category;
 
-    private String location;
+    protected String location;
 
     @JsonView({ProductDisplayForClient.class})
     String imageName;
