@@ -5,13 +5,13 @@ FROM openjdk:17-jdk-alpine
 # Définir le répertoire de travail
 WORKDIR /app
 
-# Copier le fichier JAR de l'application dans le conteneur
+# Copier le fichier JAR de l'application dans le conteneur sous le nom app.jar
 COPY target/app.jar app.jar
 
 # Copier le fichier .env dans le conteneur
 COPY .env .env
 
-# Exposer le port sur lequel l'application va tourner
+# Exposer le port sur lequel l'application va tourner(juste informatif)
 EXPOSE 8080
 
 # Commande pour exécuter l'application

@@ -3,35 +3,22 @@ VALUES
     ('John', 'Doe', 'Locatech', 'a@a.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'ADMIN', 'Adresse 1', '0612345678'),
     ('Jay', 'White', 'Locatech', 'b@b.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'CLIENT', 'Adresse 2', '0623456789'),
     ('Bob', 'Allen', 'Locatech','c@c.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'TECH', 'Adresse 3', '0634567890'),
-
 -- 2 Admin
     ('Alice', 'Dupont', 'Locatech', 'alice.dupont@a.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'ADMIN', '1 rue de la Paix, Paris', '0656789012'),
     ('Marc', 'Lemoine', 'Locatech','marc.lemoine@b.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'ADMIN', '12 avenue des Champs, Paris', '0667890123'),
-
--- 8 Techs
+-- 4 Techs
     ('Léo', 'Martin', 'Locatech','leo.martin@c.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'TECH', '25 rue Victor Hugo, Lyon', '0678901234'),
     ('Sophie', 'Bernard', 'Locatech', 'sophie.bernard@d.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'TECH', '10 rue des Fleurs, Marseille', '0689012345'),
     ('Thomas', 'Lemoine', 'Locatech', 'thomas.lemoine@e.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'TECH', '5 boulevard de la République, Toulouse', '0690123456'),
     ('Julie', 'Robert', 'Locatech','julie.robert@f.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'TECH', '22 rue de la Liberté, Lille', '0601234567'),
-    ('Antoine', 'Durand', 'Locatech', 'antoine.durand@g.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'TECH', '3 place de la Concorde, Paris', '0612345689'),
-    ('Clara', 'Moreau', 'Locatech','clara.moreau@h.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'TECH', '14 rue de l''Opéra, Paris', '0623456798'),
-    ('Louis', 'Gauthier', 'Locatech','louis.gauthier@i.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'TECH', '18 rue du Faubourg, Lyon', '0634567980'),
-    ('Chloé', 'Hervé', 'Locatech','chloe.herve@j.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'TECH', '6 avenue de Verdun, Nantes', '0645679801'),
-
--- Clients
+-- 6 Clients
     ('Jane', 'Smith', 'Green Solutions', 'jane.smith@j.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'CLIENT', '45 Rue de l’Écologie, Lyon', '0667980123'),
     ('Michael', 'Johnson', 'Finance Experts', 'michael.johnson@mj.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'CLIENT', '78 Boulevard du Commerce, Marseille', '0679801234'),
     ('Sarah', 'Lee', 'Creative Minds', 'sarah.lee@sl.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'CLIENT', '22 Rue des Artistes, Toulouse', '0689012356'),
     ('Emily', 'Davis', 'Health First', 'emily.davis@ed.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'CLIENT', '5 Allée de la Santé, Bordeaux', '0690123567'),
     ('Daniel', 'Brown', 'Logistics Pro', 'daniel.brown@db.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'CLIENT', '33 Route de la Logistique, Lille', '0601235678'),
-    ('Lisa', 'Wilson', 'EduTech', 'lisa.wilson@lw.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'CLIENT', '14 Rue de l’Éducation, Nantes', '0612356789'),
-    ('James', 'Miller', 'BuildSmart', 'james.miller@jm.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'CLIENT', '9 Avenue des Entrepreneurs, Strasbourg', '0623567890'),
-    ('Elizabeth', 'Moore', 'Fashion Forward', 'elizabeth.moore@em.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'CLIENT', '56 Rue de la Mode, Montpellier', '0635678901'),
-    ('Robert', 'Taylor', 'AgriPlus', 'robert.taylor@rt.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'CLIENT', '81 Chemin des Champs, Rennes', '0646789012'),
-    ('Sophia', 'Anderson', 'TravelEase', 'sophia.anderson@sa.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'CLIENT', '17 Rue des Voyages, Nice', '0657890123'),
-    ('Matthew', 'Thomas', 'SecureIT', 'matthew.thomas@mt.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'CLIENT', '28 Avenue de la Sécurité, Grenoble', '0668901234'),
-    ('Olivia', 'Jackson', 'Foodies', 'olivia.jackson@oj.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'CLIENT', '63 Place du Goût, Dijon', '0679012345'),
-    ('William', 'White', 'AutoDrive', 'william.white@ww.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'CLIENT', '39 Avenue de l’Automobile, Le Mans', '0680123456');
+    ('Lisa', 'Wilson', 'EduTech', 'lisa.wilson@lw.com', '$2a$10$rW2iq9f1qYIo7975JE0hIOQtSqBZ3TGpyLlRPDES4RbyijtpXDb4C', 'CLIENT', '14 Rue de l’Éducation, Nantes', '0612356789');
+
 
 -- état du matériel
 INSERT INTO etat (id, name)
