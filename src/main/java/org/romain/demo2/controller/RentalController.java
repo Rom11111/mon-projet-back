@@ -5,8 +5,7 @@ import org.romain.demo2.dao.RentalDao;
 import org.romain.demo2.model.Rental;
 import org.romain.demo2.security.AppUserDetails;
 import org.romain.demo2.security.ISecurityUtils;
-import org.romain.demo2.security.IsClient;
-import org.romain.demo2.security.IsTech;
+import org.romain.demo2.service.RentalService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,44 +19,42 @@ import java.util.Optional;
 @CrossOrigin
 @RestController
 @RequestMapping("/rentals")
-// restreint l'accès à l'ensemble du contrôleur
-@IsTech
+// Accessible à tous les rôles pour respecter les règles d'accès spécifiques dans chaque méthode
+@PreAuthorize("hasAnyRole('CLIENT', 'TECH', 'ADMIN')")
 public class RentalController {
 
     private final RentalDao rentalDao;
     private final ISecurityUtils securityUtils;
+    private final RentalService rentalService;
 
     @Autowired
-    public RentalController(RentalDao rentalDao, ISecurityUtils securityUtils) {
+    public RentalController(RentalDao rentalDao, ISecurityUtils securityUtils, RentalService rentalService) {
         this.rentalDao = rentalDao;
         this.securityUtils = securityUtils;
+        this.rentalService = rentalService;
     }
 
     @GetMapping
     public List<Rental> getAll(@AuthenticationPrincipal AppUserDetails userDetails) {
         String role = securityUtils.getRole(userDetails);
-
-        if (role.equals("ROLE_ADMIN")) {
-            return rentalDao.findAll();
+        if (role.equals("ROLE_ADMIN") || role.equals("ROLE_TECH")) {
+            return rentalDao.findAll(); // ADMIN et TECH voient tout
         } else {
-            return rentalDao.findByUserId(userDetails.getUser().getId());
+            return rentalDao.findByUserId(userDetails.getUser().getId()); // CLIENT voit ses réservations
         }
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Rental> getById(
-            @PathVariable int id,
-            @AuthenticationPrincipal AppUserDetails userDetails) {
-
+    public ResponseEntity<Rental> getById(@PathVariable int id,
+                                          @AuthenticationPrincipal AppUserDetails userDetails) {
         Optional<Rental> optionalRental = rentalDao.findById(id);
-        if (optionalRental.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+        if (optionalRental.isEmpty()) return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 
         Rental rental = optionalRental.get();
+        String role = securityUtils.getRole(userDetails);
+        boolean isOwner = rental.getUser().getId().equals(userDetails.getUser().getId());
 
-        if (!securityUtils.getRole(userDetails).equals("ROLE_ADMIN") &&
-                !rental.getUser().getId().equals(userDetails.getUser().getId())) {
+        if (!role.equals("ROLE_ADMIN") && !role.equals("ROLE_TECH") && !isOwner) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
 
@@ -65,31 +62,31 @@ public class RentalController {
     }
 
     @PostMapping
-    public ResponseEntity<Rental> create(
-            @RequestBody @Valid Rental rental,
-            @AuthenticationPrincipal AppUserDetails userDetails) {
-
+    public ResponseEntity<?> create(@RequestBody @Valid Rental rental,
+                                    @AuthenticationPrincipal AppUserDetails userDetails) {
         rental.setId(null);
         rental.setUser(userDetails.getUser());
-        Rental saved = rentalDao.save(rental);
-        return new ResponseEntity<>(saved, HttpStatus.CREATED);
+
+        try {
+            Rental saved = rentalService.createRentalIfAvailable(rental);
+            return new ResponseEntity<>(saved, HttpStatus.CREATED);
+        } catch (IllegalStateException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.CONFLICT);
+        }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(
-            @PathVariable int id,
-            @AuthenticationPrincipal AppUserDetails userDetails) {
-
+    public ResponseEntity<Void> delete(@PathVariable int id,
+                                       @AuthenticationPrincipal AppUserDetails userDetails) {
         Optional<Rental> optional = rentalDao.findById(id);
-        if (optional.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+        if (optional.isEmpty()) return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 
         Rental rental = optional.get();
         String role = securityUtils.getRole(userDetails);
+        boolean isOwner = rental.getUser().getId().equals(userDetails.getUser().getId());
 
-        if (!role.equals("ROLE_ADMIN") &&
-                !rental.getUser().getId().equals(userDetails.getUser().getId())) {
+        // Seuls ADMIN et TECH peuvent supprimer — TECH seulement ses propres locs
+        if (role.equals("ROLE_CLIENT") || (!role.equals("ROLE_ADMIN") && !isOwner)) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
 
@@ -98,28 +95,24 @@ public class RentalController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Void> update(
-            @PathVariable int id,
-            @RequestBody @Valid Rental updatedRental,
-            @AuthenticationPrincipal AppUserDetails userDetails) {
-
+    public ResponseEntity<Void> update(@PathVariable int id,
+                                       @RequestBody @Valid Rental updatedRental,
+                                       @AuthenticationPrincipal AppUserDetails userDetails) {
         Optional<Rental> optional = rentalDao.findById(id);
-        if (optional.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+        if (optional.isEmpty()) return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 
         Rental existing = optional.get();
         String role = securityUtils.getRole(userDetails);
+        boolean isOwner = existing.getUser().getId().equals(userDetails.getUser().getId());
 
-        if (!role.equals("ROLE_ADMIN") &&
-                !existing.getUser().getId().equals(userDetails.getUser().getId())) {
+        // Seuls ADMIN et TECH peuvent modifier — TECH seulement ses propres locs
+        if (role.equals("ROLE_CLIENT") || (!role.equals("ROLE_ADMIN") && !isOwner)) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
 
         updatedRental.setId(id);
-        updatedRental.setUser(existing.getUser()); // conserver le user original
+        updatedRental.setUser(existing.getUser());
         rentalDao.save(updatedRental);
-
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }
