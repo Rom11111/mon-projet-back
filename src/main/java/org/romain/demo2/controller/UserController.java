@@ -4,7 +4,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-
 import jakarta.validation.Valid;
 import org.romain.demo2.dao.UserDao;
 import org.romain.demo2.dto.UserCreationDTO;
@@ -31,13 +30,14 @@ public class UserController {
     private final UserDao userDao;
     private final UserService userService;
 
+    // Injection des dépendances via le constructeur
     public UserController(UserDao userDao, UserService userService) {
         this.userDao = userDao;
         this.userService = userService;
     }
 
     /**
-     * Récupère tous les utilisateurs avec pagination.
+     * Liste paginée de tous les utilisateurs.
      * Accessible uniquement aux rôles TECH et ADMIN.
      */
     @GetMapping
@@ -114,22 +114,36 @@ public class UserController {
     }
 
     /**
-     * Crée un nouvel utilisateur.
-     * Accessible uniquement aux rôles TECH et ADMIN.
+     * Crée un nouvel utilisateur à partir des données fournies dans le DTO.
+     * Accessible aux TECH et ADMIN.
+     * - Un TECH peut créer uniquement des utilisateurs de type CLIENT
+     * - Un ADMIN peut créer n'importe quel type d'utilisateur
      */
     @PostMapping
     @IsTech
     @Operation(summary = "Créer un utilisateur")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Utilisateur créé"),
-            @ApiResponse(responseCode = "400", description = "Erreur de validation ou données invalides")
+            @ApiResponse(responseCode = "403", description = "Rôle non autorisé"),
+            @ApiResponse(responseCode = "400", description = "Erreur de validation")
     })
     public ResponseEntity<?> createUser(@RequestBody @Valid UserCreationDTO dto) {
-        User user = new User();
+        // Récupère l'utilisateur connecté via le token
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        AppUserDetails userDetails = (AppUserDetails) authentication.getPrincipal();
+        User currentUser = userDetails.getUser();
 
-        user.setId(null); // Pour forcer la création
+        // Règle de sécurité : un TECH ne peut créer que des CLIENTS
+        if (currentUser.getRole() == Role.TECH &&
+                (dto.getRole() == Role.TECH || dto.getRole() == Role.ADMIN)) {
+            return ResponseEntity.status(403).body("Un technicien ne peut créer que des utilisateurs CLIENT");
+        }
+
+        // On crée un nouvel utilisateur à partir des données du DTO
+        User user = new User();
+        user.setId(null); // ID forcé à null pour éviter tout conflit
         user.setEmail(dto.getEmail());
-        user.setPassword(dto.getPassword());
+        user.setPassword(dto.getPassword()); // attention : mot de passe non hashé ici
         user.setFirstname(dto.getFirstname());
         user.setLastname(dto.getLastname());
         user.setCompany(dto.getCompany());
@@ -138,9 +152,17 @@ public class UserController {
         user.setRole(dto.getRole());
         user.setUserStatus(dto.getUserStatus());
 
+        // Vérifie qu’un utilisateur avec le même email n’existe pas déjà
+        if (userDao.findByEmail(dto.getEmail()).isPresent()) {
+            return ResponseEntity.status(400).body("Un utilisateur avec cet email existe déjà");
+        }
+
+        // Enregistre l'utilisateur en base
         User savedUser = userDao.save(user);
+        // Retourne 201 Created avec l'utilisateur sauvegardé
         return ResponseEntity.status(201).body(savedUser);
     }
+
 
     /**
      * Met à jour un utilisateur existant par son ID.
@@ -164,24 +186,21 @@ public class UserController {
 
         return userDao.findById(id)
                 .map(existing -> {
-                    // Interdiction pour TECH de modifier ADMIN ou un autre TECH
+                    // Un TECH ne peut pas modifier un autre TECH ou un ADMIN
                     if (currentUser.getRole() == Role.TECH &&
                             (existing.getRole() == Role.ADMIN || existing.getRole() == Role.TECH)) {
                         return ResponseEntity.status(403).body("Un technicien ne peut pas modifier un administrateur ni un autre technicien");
                     }
 
-                    updatedUser.setId(id);
+                    updatedUser.setId(id); // Assure qu’on met à jour le bon ID
                     User saved = userDao.save(updatedUser);
                     return ResponseEntity.ok(saved);
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
 
-
-
-
     /**
-     * 🧹 Désactive un utilisateur (soft delete).
+     * Désactive un utilisateur (soft delete).
      * Accessible aux TECH et ADMIN.
      * Un TECH ne peut désactiver ni un ADMIN, ni un autre TECH.
      *
@@ -251,7 +270,13 @@ public class UserController {
             @ApiResponse(responseCode = "204", description = "Utilisateur supprimé définitivement"),
             @ApiResponse(responseCode = "404", description = "Utilisateur non trouvé")
     })
-    public ResponseEntity<Void> deleteUserPermanently(@PathVariable int id) {
-        return userService.deleteUserPermanently(id);
+    public ResponseEntity<String> deleteUserPermanently(@PathVariable int id) {
+        boolean deleted = userService.deleteUserPermanently(id);
+
+        if (deleted) {
+            return ResponseEntity.ok("Utilisateur supprimé définitivement.");
+        } else {
+            return ResponseEntity.status(404).body("Utilisateur non trouvé.");
+        }
     }
 }

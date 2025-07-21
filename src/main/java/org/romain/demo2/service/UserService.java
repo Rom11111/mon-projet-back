@@ -51,17 +51,44 @@ public class UserService {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    public ResponseEntity<?> reactivateUser(User currentUser, int targetId) {
+        return userDao.findById(targetId)
+                .map(targetUser -> {
+                    // Cas interdit : tentative de réactivation d'un admin (optionnel, à toi de voir)
+                    if (targetUser.getRole() == Role.ADMIN) {
+                        return forbidden("Impossible de réactiver un administrateur désactivé");
+                    }
+                    // Cas interdit : TECH ne peut pas réactiver un autre TECH
+                    if (currentUser.getRole() == Role.TECH && targetUser.getRole() == Role.TECH) {
+                        return forbidden("Un technicien ne peut pas réactiver un autre technicien");
+                    }
+                    // Déjà actif
+                    if (targetUser.getUserStatus() == UserStatus.ACTIVE) {
+                        return bad("L'utilisateur est déjà actif");
+                    }
+
+                    // On passe l'utilisateur à l'état actif
+                    targetUser.setUserStatus(UserStatus.ACTIVE);
+                    userDao.save(targetUser);
+                    return ResponseEntity.ok("Utilisateur réactivé avec succès");
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     /**
      * Supprime définitivement un utilisateur (hard delete).
      * Utilisé uniquement par les administrateurs.
+     *
+     * @param targetId ID de l'utilisateur à supprimer
+     * @return true si supprimé, false si utilisateur non trouvé
      */
-    public ResponseEntity<Void> deleteUserPermanently(int targetId) {
+    public boolean deleteUserPermanently(int targetId) {
         if (!userDao.existsById(targetId)) {
-            return ResponseEntity.notFound().build();
+            return false; // utilisateur non trouvé
         }
 
         userDao.deleteById(targetId);
-        return ResponseEntity.noContent().build();
+        return true; // suppression réussie
     }
 
     // Helpers internes pour renvoyer des erreurs avec message personnalisé

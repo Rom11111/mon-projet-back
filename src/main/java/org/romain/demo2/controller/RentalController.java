@@ -1,10 +1,17 @@
 package org.romain.demo2.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.romain.demo2.dao.RentalDao;
+import org.romain.demo2.dto.RentalDTO;
 import org.romain.demo2.model.Rental;
 import org.romain.demo2.security.AppUserDetails;
 import org.romain.demo2.security.ISecurityUtils;
+import org.romain.demo2.security.IsClient;
+import org.romain.demo2.security.IsTech;
 import org.romain.demo2.service.RentalService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -16,11 +23,10 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Optional;
 
-@CrossOrigin
 @RestController
-@RequestMapping("/rentals")
-// Accessible à tous les rôles pour respecter les règles d'accès spécifiques dans chaque méthode
-@PreAuthorize("hasAnyRole('CLIENT', 'TECH', 'ADMIN')")
+@RequestMapping("/api/rentals")
+@Tag(name = "Location", description = "API de gestion des locations de produits")
+@CrossOrigin(origins = "http://localhost:4200")
 public class RentalController {
 
     private final RentalDao rentalDao;
@@ -34,85 +40,98 @@ public class RentalController {
         this.rentalService = rentalService;
     }
 
+    /**
+     * Liste toutes les locations.
+     * - ADMIN et TECH voient tout
+     * - CLIENT voit seulement ses locations
+     */
     @GetMapping
-    public List<Rental> getAll(@AuthenticationPrincipal AppUserDetails userDetails) {
-        String role = securityUtils.getRole(userDetails);
-        if (role.equals("ROLE_ADMIN") || role.equals("ROLE_TECH")) {
-            return rentalDao.findAll(); // ADMIN et TECH voient tout
-        } else {
-            return rentalDao.findByUserId(userDetails.getUser().getId()); // CLIENT voit ses réservations
-        }
+    @Operation(summary = "Lister les locations")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Liste récupérée avec succès")
+    })
+    public ResponseEntity<List<Rental>> getAll(@AuthenticationPrincipal AppUserDetails userDetails) {
+        List<Rental> rentals = rentalService.findAllAccessibleBy(userDetails.getUser());
+        return ResponseEntity.ok(rentals);
     }
 
+
+    /**
+     * Récupère une location spécifique par son ID.
+     */
     @GetMapping("/{id}")
-    public ResponseEntity<Rental> getById(@PathVariable int id,
-                                          @AuthenticationPrincipal AppUserDetails userDetails) {
-        Optional<Rental> optionalRental = rentalDao.findById(id);
-        if (optionalRental.isEmpty()) return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    @Operation(summary = "Voir une location par ID")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Location trouvée"),
+            @ApiResponse(responseCode = "403", description = "Accès interdit"),
+            @ApiResponse(responseCode = "404", description = "Location non trouvée")
+    })
+    public ResponseEntity<?> getById(@PathVariable int id, @AuthenticationPrincipal AppUserDetails userDetails) {
+        Optional<Rental> optional = rentalService.findById(id);
 
-        Rental rental = optionalRental.get();
-        String role = securityUtils.getRole(userDetails);
-        boolean isOwner = rental.getUser().getId().equals(userDetails.getUser().getId());
-
-        if (!role.equals("ROLE_ADMIN") && !role.equals("ROLE_TECH") && !isOwner) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        if (optional.isEmpty()) {
+            return ResponseEntity.status(404).body("Location introuvable.");
         }
-
-        return new ResponseEntity<>(rental, HttpStatus.OK);
-    }
-
-    @PostMapping
-    public ResponseEntity<?> create(@RequestBody @Valid Rental rental,
-                                    @AuthenticationPrincipal AppUserDetails userDetails) {
-        rental.setId(null);
-        rental.setUser(userDetails.getUser());
-
-        try {
-            Rental saved = rentalService.createRentalIfAvailable(rental);
-            return new ResponseEntity<>(saved, HttpStatus.CREATED);
-        } catch (IllegalStateException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.CONFLICT);
-        }
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable int id,
-                                       @AuthenticationPrincipal AppUserDetails userDetails) {
-        Optional<Rental> optional = rentalDao.findById(id);
-        if (optional.isEmpty()) return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 
         Rental rental = optional.get();
-        String role = securityUtils.getRole(userDetails);
-        boolean isOwner = rental.getUser().getId().equals(userDetails.getUser().getId());
-
-        // Seuls ADMIN et TECH peuvent supprimer — TECH seulement ses propres locs
-        if (role.equals("ROLE_CLIENT") || (!role.equals("ROLE_ADMIN") && !isOwner)) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        if (!rentalService.canAccessRental(userDetails.getUser(), rental)) {
+            return ResponseEntity.status(403).body("Vous n'avez pas accès à cette location.");
         }
 
-        rentalDao.deleteById(id);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        return ResponseEntity.ok(rental);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Void> update(@PathVariable int id,
-                                       @RequestBody @Valid Rental updatedRental,
-                                       @AuthenticationPrincipal AppUserDetails userDetails) {
-        Optional<Rental> optional = rentalDao.findById(id);
-        if (optional.isEmpty()) return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-
-        Rental existing = optional.get();
-        String role = securityUtils.getRole(userDetails);
-        boolean isOwner = existing.getUser().getId().equals(userDetails.getUser().getId());
-
-        // Seuls ADMIN et TECH peuvent modifier — TECH seulement ses propres locs
-        if (role.equals("ROLE_CLIENT") || (!role.equals("ROLE_ADMIN") && !isOwner)) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+    /**
+     * Crée une nouvelle location.
+     * - Uniquement les CLIENTS peuvent louer
+     */
+    @PostMapping
+    @IsClient
+    @Operation(summary = "Créer une location")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Location créée"),
+            @ApiResponse(responseCode = "409", description = "Produit déjà réservé")
+    })
+    public ResponseEntity<?> create(@RequestBody @Valid RentalDTO dto, @AuthenticationPrincipal AppUserDetails userDetails) {
+        try {
+            Rental saved = rentalService.createRental(userDetails.getUser(), dto);
+            return ResponseEntity.status(201).body(saved);
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(409).body(e.getMessage());
         }
+    }
 
-        updatedRental.setId(id);
-        updatedRental.setUser(existing.getUser());
-        rentalDao.save(updatedRental);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    /**
+     * Met à jour une location (ADMIN ou TECH propriétaire).
+     */
+    @PutMapping("/{id}")
+    @IsTech
+    @Operation(summary = "Mettre à jour une location")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Location mise à jour"),
+            @ApiResponse(responseCode = "403", description = "Interdit"),
+            @ApiResponse(responseCode = "404", description = "Location non trouvée")
+    })
+    public ResponseEntity<?> update(@PathVariable int id,
+                                    @RequestBody @Valid RentalDTO dto,
+                                    @AuthenticationPrincipal AppUserDetails userDetails) {
+        return rentalService.updateRental(id, userDetails.getUser(), dto);
+    }
+
+    /**
+     * Supprime une location.
+     * - ADMIN peut tout supprimer
+     * - TECH peut supprimer ses propres locations
+     */
+    @DeleteMapping("/{id}")
+    @IsTech
+    @Operation(summary = "Supprimer une location")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Supprimée avec succès"),
+            @ApiResponse(responseCode = "403", description = "Non autorisé"),
+            @ApiResponse(responseCode = "404", description = "Introuvable")
+    })
+    public ResponseEntity<?> delete(@PathVariable int id, @AuthenticationPrincipal AppUserDetails userDetails) {
+        return rentalService.deleteRental(id, userDetails.getUser());
     }
 }

@@ -24,12 +24,10 @@ public class User {
 
     @NotBlank(groups = UpdateGroup.class)
     @Column(nullable = false)
-    @JsonView(ProductViews.Tech.class)
     protected String firstname;
 
     @NotBlank(groups = UpdateGroup.class)
     @Column(nullable = false)
-    @JsonView(ProductViews.Tech.class)
     protected String lastname;
 
     @NotBlank(groups = RegistrationGroup.class)
