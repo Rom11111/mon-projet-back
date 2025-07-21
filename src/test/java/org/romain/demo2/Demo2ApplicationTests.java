@@ -52,7 +52,7 @@ class Demo2ApplicationTests {
 
     @Test
     @WithUserDetails("d@d.com")
-        // obligatoire si le controleur utilise @AuthenticatiopPrincipal
+        // obligatoire si le controleur utilise @AuthenticationPrincipal
     void deleteProductAsClient_shouldBe403ok() throws Exception {
 
         mvc.perform(delete("/product/1"))
@@ -73,7 +73,7 @@ class Demo2ApplicationTests {
 
     @Test
     @WithUserDetails("c@c.com")
-        // obligatoire si le controleur utilise @AuthenticatiopPrincipal
+        // obligatoire si le controleur utilise @AuthenticationPrincipal
     void deleteAsTechButNotAdmin_shouldBe204NoContent() throws Exception {
 
         mvc.perform(delete("/product/6"))
