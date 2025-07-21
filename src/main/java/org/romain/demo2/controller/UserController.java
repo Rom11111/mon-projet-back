@@ -5,13 +5,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.validation.Valid;
 import org.romain.demo2.dao.UserDao;
+import org.romain.demo2.dto.UserCreationDTO;
 import org.romain.demo2.model.Role;
 import org.romain.demo2.model.User;
-import org.romain.demo2.security.AppUserDetails;
-import org.romain.demo2.security.IsAdmin;
-import org.romain.demo2.security.IsClient;
-import org.romain.demo2.security.IsTech;
+import org.romain.demo2.security.*;
 import org.romain.demo2.service.UserService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -71,10 +70,10 @@ public class UserController {
 
     /**
      * Récupère un utilisateur par son ID.
-     * Accessible à tous les rôles connectés.
+     * Accessible uniquement aux TECH et ADMIN.
      */
     @GetMapping("/{id}")
-    @IsClient
+    @IsTech
     @Operation(summary = "Récupérer un utilisateur par ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Utilisateur trouvé"),
@@ -84,6 +83,34 @@ public class UserController {
         return userDao.findById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    /**
+     * Retourne le profil de l'utilisateur actuellement connecté.
+     *
+     * Accessible à tous les rôles (ADMIN, TECH, CLIENT).
+     * On récupère l'utilisateur à partir du token JWT.
+     *
+     * Si jamais l'utilisateur n'est pas bien chargé (problème de token ou de sécurité),
+     * on retourne une erreur 500.
+     */
+    @GetMapping("/me")
+    @Operation(summary = "Voir son propre profil")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Profil utilisateur retourné"),
+            @ApiResponse(responseCode = "500", description = "Erreur interne si utilisateur non trouvé dans le token")
+    })
+    @IsConnected
+    public ResponseEntity<User> getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (!(authentication.getPrincipal() instanceof AppUserDetails userDetails)) {
+            System.err.println("Erreur : utilisateur non reconnu dans le token");
+            return ResponseEntity.status(500).build();
+        }
+
+        User currentUser = userDetails.getUser();
+        return ResponseEntity.ok(currentUser);
     }
 
     /**
@@ -97,8 +124,20 @@ public class UserController {
             @ApiResponse(responseCode = "201", description = "Utilisateur créé"),
             @ApiResponse(responseCode = "400", description = "Erreur de validation ou données invalides")
     })
-    public ResponseEntity<User> createUser(@RequestBody User user) {
-        user.setId(null); // On force à null pour éviter les conflits avec un ID déjà existant
+    public ResponseEntity<?> createUser(@RequestBody @Valid UserCreationDTO dto) {
+        User user = new User();
+
+        user.setId(null); // Pour forcer la création
+        user.setEmail(dto.getEmail());
+        user.setPassword(dto.getPassword());
+        user.setFirstname(dto.getFirstname());
+        user.setLastname(dto.getLastname());
+        user.setCompany(dto.getCompany());
+        user.setCompanyAddress(dto.getCompanyAddress());
+        user.setPhone(dto.getPhone());
+        user.setRole(dto.getRole());
+        user.setUserStatus(dto.getUserStatus());
+
         User savedUser = userDao.save(user);
         return ResponseEntity.status(201).body(savedUser);
     }
@@ -106,23 +145,39 @@ public class UserController {
     /**
      * Met à jour un utilisateur existant par son ID.
      * Accessible uniquement aux rôles TECH et ADMIN.
+     * Règles :
+     * - Un TECH ne peut pas modifier un ADMIN
+     * - Un TECH ne peut pas modifier un autre TECH
      */
     @PutMapping("/{id}")
     @IsTech
     @Operation(summary = "Mettre à jour un utilisateur")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Utilisateur mis à jour"),
+            @ApiResponse(responseCode = "403", description = "Interdit de modifier cet utilisateur"),
             @ApiResponse(responseCode = "404", description = "Utilisateur non trouvé")
     })
-    public ResponseEntity<User> updateUser(@PathVariable int id, @RequestBody User updatedUser) {
+    public ResponseEntity<?> updateUser(@PathVariable int id, @RequestBody User updatedUser) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        AppUserDetails userDetails = (AppUserDetails) authentication.getPrincipal();
+        User currentUser = userDetails.getUser();
+
         return userDao.findById(id)
                 .map(existing -> {
-                    updatedUser.setId(id); // On force l'ID pour s'assurer qu'on écrase le bon enregistrement
+                    // Interdiction pour TECH de modifier ADMIN ou un autre TECH
+                    if (currentUser.getRole() == Role.TECH &&
+                            (existing.getRole() == Role.ADMIN || existing.getRole() == Role.TECH)) {
+                        return ResponseEntity.status(403).body("Un technicien ne peut pas modifier un administrateur ni un autre technicien");
+                    }
+
+                    updatedUser.setId(id);
                     User saved = userDao.save(updatedUser);
                     return ResponseEntity.ok(saved);
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
+
+
 
 
     /**
@@ -155,6 +210,36 @@ public class UserController {
         return userService.deactivateUser(currentUser, id);
     }
 
+    /**
+     * Réactive un utilisateur précédemment désactivé (soft deleted).
+     * Accessible uniquement aux administrateurs (ADMIN).
+     *
+     * Règles de sécurité :
+     * - Seul un ADMIN peut réactiver un utilisateur
+     * - Impossible de réactiver un utilisateur déjà actif (retourne 400)
+     * - Si l'utilisateur n'existe pas (ID inconnu), retourne 404
+     *
+     * Cette méthode appelle userService.reactivateUser(...) pour appliquer la logique métier.
+     *
+     * @param id l'identifiant de l'utilisateur à réactiver
+     * @return 200 si réactivation OK, sinon 400, 403 ou 404 selon les cas
+     */
+    @PutMapping("/{id}/reactivate")
+    @IsAdmin // Seul un administrateur peut réactiver un utilisateur
+    @Operation(summary = "Réactiver un utilisateur désactivé", description = "Seul un ADMIN peut effectuer cette opération")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Utilisateur réactivé avec succès"),
+            @ApiResponse(responseCode = "403", description = "Interdit de réactiver cet utilisateur"),
+            @ApiResponse(responseCode = "400", description = "L'utilisateur est déjà actif"),
+            @ApiResponse(responseCode = "404", description = "Utilisateur non trouvé")
+    })
+    public ResponseEntity<?> reactivateUser(@PathVariable int id) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        AppUserDetails userDetails = (AppUserDetails) authentication.getPrincipal();
+        User currentUser = userDetails.getUser();
+
+        return userService.reactivateUser(currentUser, id);
+    }
 
     /**
      * Supprime définitivement un utilisateur (hard delete).
