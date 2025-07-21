@@ -8,10 +8,8 @@ import org.romain.demo2.model.Etat;
 import org.romain.demo2.model.Product;
 import org.romain.demo2.security.*;
 import org.romain.demo2.service.ServiceFile;
-import org.romain.demo2.view.ProductDisplayForClient;
-import org.romain.demo2.view.ProductDisplayForTech;
+import org.romain.demo2.view.ProductViews;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.ssl.SslProperties;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -30,8 +28,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-@CrossOrigin
+@CrossOrigin(origins = "http://localhost:4200")
 @RestController
+@RequestMapping("/api")  //Ajout du préfixe commun
 public class ProductController {
 
     protected ProductDao productDao;
@@ -48,7 +47,7 @@ public class ProductController {
 
     @GetMapping("/admin/products")
     @IsTech
-    @JsonView(ProductDisplayForTech.class)
+    @JsonView(ProductViews.Tech.class)
     public List<Product> getAllAsTech() {
 
         return productDao.findAll();
@@ -56,7 +55,7 @@ public class ProductController {
 
     @GetMapping("/product/{id}")
     @IsClient
-    @JsonView(ProductDisplayForClient.class)
+    @JsonView(ProductViews.Client.class)
     public ResponseEntity<Product> /* être plus precis sur le retour de la methode */ get(@PathVariable int id) {
 
         Optional<Product> productOptional = productDao.findById(id);
@@ -71,8 +70,8 @@ public class ProductController {
 
     @GetMapping("/products")
     @IsClient
+    @JsonView(ProductViews.Client.class)
     public List<Product> getAll() {
-
         return productDao.findAll();
     }
 
@@ -90,12 +89,10 @@ public class ProductController {
         // dans le cas d'un enum
         //product.setcreator(userDetails.getUser());
 
-
         if (product.getEtat() == null) {
             Etat newEtat = new Etat();
             newEtat.setId(1);
             product.setEtat(newEtat);
-
         }
 
         product.setId(null);
@@ -104,8 +101,9 @@ public class ProductController {
             try {
                 String date = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss"));
                 String imageName = date + "_" + product.getName() + "_" + UUID.randomUUID() + "_" + photo.getOriginalFilename();
-                serviceFile.uploadToLocalFileSystem(photo, imageName, false);
+                serviceFile.uploadToLocalFileSystem(photo, imageName, true);
 
+                // Sauvegarde le nom de l'image dans le produit
                 product.setImageName(imageName);
 
             }catch (Exception e) {
@@ -115,10 +113,10 @@ public class ProductController {
 
         productDao.save(product);
 
+        // Supprime le créateur pour éviter de l'envoyer côté client
         product.setCreator((null));
 
         return new ResponseEntity<>(product, HttpStatus.CREATED);
-
     }
 
     @DeleteMapping("/product/{id}")
@@ -135,8 +133,8 @@ public class ProductController {
 
         String role = securityUtils.getRole(userDetails);
 
-        //si l'id du createur du produit est different de l'id de la personne connectée
-        //et que la personne n'est pas l'admin, alors on envoie un erreur 403 FORBIDEN
+        //si l'id du créateur du produit est different de l'id de la personne connectée
+        //et que la personne n'est pas l'admin, alors on envoie une erreur 403 FORBIDDEN
         if (!role.equals("ROLE_ADMIN") &&
                 optionalProduct.get().getCreator().getId() != userDetails.getUser().getId()) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
