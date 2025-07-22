@@ -1,5 +1,7 @@
 ### Ne pousse pas ###
 .local.env
+*.crt
+/uploads
 
 HELP.md
 target/

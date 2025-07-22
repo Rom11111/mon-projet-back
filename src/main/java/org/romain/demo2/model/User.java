@@ -8,7 +8,8 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.romain.demo2.view.ProductDisplayForClient;
+import org.romain.demo2.view.ProductViews;
+
 
 @Getter
 @Setter
@@ -27,7 +28,6 @@ public class User {
 
     @NotBlank(groups = UpdateGroup.class)
     @Column(nullable = false)
-    @JsonView({ProductDisplayForClient.class})
     protected String lastname;
 
     @NotBlank(groups = RegistrationGroup.class)
@@ -47,8 +47,8 @@ public class User {
     private String photoUrl;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private UserStatus userStatus = UserStatus.Active;
+    @Column(nullable = false, columnDefinition = "ENUM('ACTIVE', 'INACTIVE', 'PENDING', 'BLOCKED')")
+    private UserStatus userStatus = UserStatus.ACTIVE;
 
     @CreationTimestamp
     @Column(updatable = false)

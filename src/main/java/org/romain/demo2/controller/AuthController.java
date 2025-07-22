@@ -15,16 +15,14 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
 import java.util.UUID;
 
 @CrossOrigin
 @RestController
+@RequestMapping("/api")
 public class AuthController {
 
     protected AuthenticationProvider authenticationProvider;
@@ -39,7 +37,6 @@ public class AuthController {
         this.passwordEncoder = passwordEncoder;
         this.securityUtils = securityUtils;
     }
-
 
     @PostMapping("/signin") // Gère l'inscription
     public ResponseEntity<User> signin(@RequestBody @Validated(User.RegistrationGroup.class) User user) {
@@ -56,15 +53,13 @@ public class AuthController {
         user.setLastname("A renseigner");
         user.setPhone("A renseigner");
 
-
         userDao.save(user);
-
-
 
         //On masque le mot de passe
         user.setPassword(null);
         return new ResponseEntity<User>(user, HttpStatus.CREATED);
     }
+
 
     @PostMapping("/login") // Gère la connection
     public ResponseEntity<String> login(@RequestBody User user) {
@@ -82,8 +77,8 @@ public class AuthController {
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED); // fait une erreur 401 si le User n'est pas connecté
         }
 
-
     }
+
 
     @PostMapping("/validate-email")
     public ResponseEntity<User> validateEmail(@RequestBody EmailValidationDto emailValidationDto) {
