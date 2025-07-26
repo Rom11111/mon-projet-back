@@ -31,8 +31,6 @@ public class SecurityUtils implements ISecurityUtils {
                 .addClaims(Map.of("userId", userDetails.getUserId()))
                 .signWith(SignatureAlgorithm.HS256, jwtSecret)
                 .compact();
-
-
     }
 
     @Override

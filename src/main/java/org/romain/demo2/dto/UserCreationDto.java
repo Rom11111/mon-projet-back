@@ -10,7 +10,7 @@ import org.romain.demo2.model.UserStatus;
 
 @Getter
 @Setter
-public class UserCreationDTO {
+public class UserCreationDto {
 
     @NotBlank
     @Email

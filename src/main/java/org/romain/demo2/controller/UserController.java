@@ -6,7 +6,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.romain.demo2.dao.UserDao;
-import org.romain.demo2.dto.UserCreationDTO;
+import org.romain.demo2.dto.UserCreationDto;
 import org.romain.demo2.model.Role;
 import org.romain.demo2.model.User;
 import org.romain.demo2.security.*;
@@ -118,6 +118,13 @@ public class UserController {
      * Accessible aux TECH et ADMIN.
      * - Un TECH peut créer uniquement des utilisateurs de type CLIENT
      * - Un ADMIN peut créer n'importe quel type d'utilisateur
+     * Le mot de passe est automatiquement hashé dans le service
+     * pour éviter tout enregistrement en clair.
+     *
+     * La méthode renvoie :
+     * - 201 si tout s'est bien passé
+     * - 403 si l'utilisateur connecté n'a pas le droit de créer ce type de compte
+     * - 400 si l'email est déjà utilisé
      */
     @PostMapping
     @IsTech
@@ -127,41 +134,16 @@ public class UserController {
             @ApiResponse(responseCode = "403", description = "Rôle non autorisé"),
             @ApiResponse(responseCode = "400", description = "Erreur de validation")
     })
-    public ResponseEntity<?> createUser(@RequestBody @Valid UserCreationDTO dto) {
-        // Récupère l'utilisateur connecté via le token
+    public ResponseEntity<?> createUser(@RequestBody @Valid UserCreationDto dto) {
+        // Récupère l'utilisateur connecté via le token JWT
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         AppUserDetails userDetails = (AppUserDetails) authentication.getPrincipal();
         User currentUser = userDetails.getUser();
 
-        // Règle de sécurité : un TECH ne peut créer que des CLIENTS
-        if (currentUser.getRole() == Role.TECH &&
-                (dto.getRole() == Role.TECH || dto.getRole() == Role.ADMIN)) {
-            return ResponseEntity.status(403).body("Un technicien ne peut créer que des utilisateurs CLIENT");
-        }
-
-        // On crée un nouvel utilisateur à partir des données du DTO
-        User user = new User();
-        user.setId(null); // ID forcé à null pour éviter tout conflit
-        user.setEmail(dto.getEmail());
-        user.setPassword(dto.getPassword()); // attention : mot de passe non hashé ici
-        user.setFirstname(dto.getFirstname());
-        user.setLastname(dto.getLastname());
-        user.setCompany(dto.getCompany());
-        user.setCompanyAddress(dto.getCompanyAddress());
-        user.setPhone(dto.getPhone());
-        user.setRole(dto.getRole());
-        user.setUserStatus(dto.getUserStatus());
-
-        // Vérifie qu’un utilisateur avec le même email n’existe pas déjà
-        if (userDao.findByEmail(dto.getEmail()).isPresent()) {
-            return ResponseEntity.status(400).body("Un utilisateur avec cet email existe déjà");
-        }
-
-        // Enregistre l'utilisateur en base
-        User savedUser = userDao.save(user);
-        // Retourne 201 Created avec l'utilisateur sauvegardé
-        return ResponseEntity.status(201).body(savedUser);
+        // Délègue la logique métier au UserService
+        return userService.createUser(dto, currentUser);
     }
+
 
 
     /**
