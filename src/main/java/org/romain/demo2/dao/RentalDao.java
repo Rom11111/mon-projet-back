@@ -2,25 +2,27 @@ package org.romain.demo2.dao;
 
 import org.romain.demo2.model.Rental;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
 
-public interface RentalDao extends JpaRepository<Rental, Integer> {
+@Repository
+public interface RentalDao extends JpaRepository<Rental, Long> {
 
     /**
-     * Récupère toutes les locations liées à un utilisateur (client).
+     * Retourne toutes les locations faites par un utilisateur donné (client).
      */
-    List<Rental> findByUserId(Integer userId);
+    List<Rental> findByClientId(Integer clientId);
 
     /**
-     * Récupère toutes les locations d’un produit à une date donnée.
-     * Utilisé pour vérifier si un produit est déjà réservé ce jour-là.
+     * Retourne les réservations qui chevauchent une période donnée pour un produit.
+     * Une réservation est en conflit si :
+     * - Sa date de début est avant ou le jour de la fin demandée
+     * - Sa date de fin est après ou le jour du début demandé
+     * Si cette méthode retourne une liste non vide, alors le produit est déjà réservé.
      */
-    @Query("SELECT r FROM Rental r WHERE r.product.id = :productId AND r.date = :date")
-    List<Rental> findByProductAndDate(@Param("productId") Integer productId,
-                                      @Param("date") LocalDate date);
+    List<Rental> findByProductIdAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
+            Integer productId, LocalDate end, LocalDate start
+    );
 }
-

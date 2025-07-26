@@ -5,18 +5,15 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.romain.demo2.dao.RentalDao;
-import org.romain.demo2.dto.RentalDTO;
+import org.romain.demo2.dto.RentalRequestDto;
 import org.romain.demo2.model.Rental;
 import org.romain.demo2.security.AppUserDetails;
-import org.romain.demo2.security.ISecurityUtils;
 import org.romain.demo2.security.IsClient;
 import org.romain.demo2.security.IsTech;
+
 import org.romain.demo2.service.RentalService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,14 +26,10 @@ import java.util.Optional;
 @CrossOrigin(origins = "http://localhost:4200")
 public class RentalController {
 
-    private final RentalDao rentalDao;
-    private final ISecurityUtils securityUtils;
     private final RentalService rentalService;
 
     @Autowired
-    public RentalController(RentalDao rentalDao, ISecurityUtils securityUtils, RentalService rentalService) {
-        this.rentalDao = rentalDao;
-        this.securityUtils = securityUtils;
+    public RentalController(RentalService rentalService) {
         this.rentalService = rentalService;
     }
 
@@ -92,14 +85,16 @@ public class RentalController {
             @ApiResponse(responseCode = "201", description = "Location créée"),
             @ApiResponse(responseCode = "409", description = "Produit déjà réservé")
     })
-    public ResponseEntity<?> create(@RequestBody @Valid RentalDTO dto, @AuthenticationPrincipal AppUserDetails userDetails) {
+    public ResponseEntity<?> create(@RequestBody @Valid RentalRequestDto dto,
+                                    @AuthenticationPrincipal AppUserDetails userDetails) {
         try {
-            Rental saved = rentalService.createRental(userDetails.getUser(), dto);
+            Rental saved = rentalService.createRental(dto, userDetails.getUser().getId());
             return ResponseEntity.status(201).body(saved);
         } catch (IllegalStateException e) {
             return ResponseEntity.status(409).body(e.getMessage());
         }
     }
+
 
     /**
      * Met à jour une location (ADMIN ou TECH propriétaire).
@@ -113,7 +108,7 @@ public class RentalController {
             @ApiResponse(responseCode = "404", description = "Location non trouvée")
     })
     public ResponseEntity<?> update(@PathVariable int id,
-                                    @RequestBody @Valid RentalDTO dto,
+                                    @RequestBody @Valid RentalRequestDto dto,
                                     @AuthenticationPrincipal AppUserDetails userDetails) {
         return rentalService.updateRental(id, userDetails.getUser(), dto);
     }
