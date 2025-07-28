@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.romain.demo2.dto.ApiResponseDto;
 import org.romain.demo2.dto.RentalRequestDto;
 import org.romain.demo2.model.Rental;
 import org.romain.demo2.security.AppUserDetails;
@@ -34,23 +35,23 @@ public class RentalController {
     }
 
     /**
-     * Liste toutes les locations.
-     * - ADMIN et TECH voient tout
-     * - CLIENT voit seulement ses locations
+     * Liste toutes les locations accessibles selon le rôle :
+     * - CLIENT : ses propres locations
+     * - TECH / ADMIN : toutes
      */
     @GetMapping
     @Operation(summary = "Lister les locations")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Liste récupérée avec succès")
     })
-    public ResponseEntity<List<Rental>> getAll(@AuthenticationPrincipal AppUserDetails userDetails) {
+    public ResponseEntity<?> getAll(@AuthenticationPrincipal AppUserDetails userDetails) {
         List<Rental> rentals = rentalService.findAllAccessibleBy(userDetails.getUser());
-        return ResponseEntity.ok(rentals);
+        return ResponseEntity.ok(new ApiResponseDto<>("Liste des locations récupérée.", rentals));
     }
 
 
     /**
-     * Récupère une location spécifique par son ID.
+     * Récupère une location par son ID si l'utilisateur a le droit.
      */
     @GetMapping("/{id}")
     @Operation(summary = "Voir une location par ID")
@@ -63,20 +64,19 @@ public class RentalController {
         Optional<Rental> optional = rentalService.findById(id);
 
         if (optional.isEmpty()) {
-            return ResponseEntity.status(404).body("Location introuvable.");
+            return ResponseEntity.status(404).body(new ApiResponseDto<>("Location introuvable.", null));
         }
 
         Rental rental = optional.get();
         if (!rentalService.canAccessRental(userDetails.getUser(), rental)) {
-            return ResponseEntity.status(403).body("Vous n'avez pas accès à cette location.");
+            return ResponseEntity.status(403).body(new ApiResponseDto<>("Vous n'avez pas accès à cette location.", null));
         }
 
-        return ResponseEntity.ok(rental);
+        return ResponseEntity.ok(new ApiResponseDto<>("Location trouvée.", rental));
     }
 
     /**
-     * Crée une nouvelle location.
-     * - Uniquement les CLIENTS peuvent louer
+     * Crée une nouvelle location (réservé aux clients).
      */
     @PostMapping
     @IsClient
@@ -89,44 +89,54 @@ public class RentalController {
                                     @AuthenticationPrincipal AppUserDetails userDetails) {
         try {
             Rental saved = rentalService.createRental(dto, userDetails.getUser().getId());
-            return ResponseEntity.status(201).body(saved);
+            return ResponseEntity.status(201).body(new ApiResponseDto<>("La location a bien été créée.", saved));
         } catch (IllegalStateException e) {
-            return ResponseEntity.status(409).body(e.getMessage());
+            return ResponseEntity.status(409).body(new ApiResponseDto<>(e.getMessage(), null));
         }
     }
 
-
     /**
-     * Met à jour une location (ADMIN ou TECH propriétaire).
+     * Met à jour une location existante (réservé au TECH ou ADMIN).
      */
     @PutMapping("/{id}")
     @IsTech
     @Operation(summary = "Mettre à jour une location")
     @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "Location mise à jour"),
+            @ApiResponse(responseCode = "200", description = "Location mise à jour"),
             @ApiResponse(responseCode = "403", description = "Interdit"),
             @ApiResponse(responseCode = "404", description = "Location non trouvée")
     })
     public ResponseEntity<?> update(@PathVariable int id,
                                     @RequestBody @Valid RentalRequestDto dto,
                                     @AuthenticationPrincipal AppUserDetails userDetails) {
-        return rentalService.updateRental(id, userDetails.getUser(), dto);
+        Optional<Rental> updated = rentalService.updateRentalWithResult(id, userDetails.getUser(), dto);
+
+        if (updated.isEmpty()) {
+            return ResponseEntity.status(404).body(new ApiResponseDto<>("Location introuvable ou accès interdit.", null));
+        }
+
+        return ResponseEntity.ok(new ApiResponseDto<>("La location a bien été mise à jour.", updated.get()));
     }
 
     /**
-     * Supprime une location.
-     * - ADMIN peut tout supprimer
-     * - TECH peut supprimer ses propres locations
+     * Supprime une location (ADMIN ou TECH propriétaire).
      */
     @DeleteMapping("/{id}")
     @IsTech
     @Operation(summary = "Supprimer une location")
     @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "Supprimée avec succès"),
+            @ApiResponse(responseCode = "200", description = "Supprimée avec succès"),
             @ApiResponse(responseCode = "403", description = "Non autorisé"),
             @ApiResponse(responseCode = "404", description = "Introuvable")
     })
-    public ResponseEntity<?> delete(@PathVariable int id, @AuthenticationPrincipal AppUserDetails userDetails) {
-        return rentalService.deleteRental(id, userDetails.getUser());
+    public ResponseEntity<?> delete(@PathVariable int id,
+                                    @AuthenticationPrincipal AppUserDetails userDetails) {
+        boolean deleted = rentalService.deleteRental(id, userDetails.getUser());
+
+        if (!deleted) {
+            return ResponseEntity.status(403).body(new ApiResponseDto<>("Suppression non autorisée ou location introuvable.", null));
+        }
+
+        return ResponseEntity.ok(new ApiResponseDto<>("La location a bien été supprimée.", null));
     }
 }

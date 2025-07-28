@@ -5,8 +5,10 @@ import org.romain.demo2.dao.ProductDao;
 import org.romain.demo2.dao.RentalDao;
 import org.romain.demo2.dao.UserDao;
 import org.romain.demo2.dto.RentalRequestDto;
+import org.romain.demo2.exception.BusinessException;
 import org.romain.demo2.model.*;
-import org.springframework.http.ResponseEntity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -22,66 +24,77 @@ public class RentalService {
     private final ProductDao productDao;
     private final UserDao userDao;
 
+    // Logger pour suivre ce qui se passe côté serveur
+    private static final Logger log = LoggerFactory.getLogger(RentalService.class);
+
     /**
-     * Méthode pour créer une nouvelle location.
-     * Uniquement un utilisateur de rôle CLIENT peut faire ça.
-     * Je vérifie que le produit et le client existent,
-     * que les dates sont cohérentes,
-     * et qu'il n'y a pas déjà une réservation sur cette période.
+     * Crée une nouvelle location après toutes les vérifications métier.
+     * Je vérifie : produit existant, client valide, dates cohérentes, produit dispo.
      */
     public Rental createRental(RentalRequestDto request, Integer clientId) {
-        // 1. Je vérifie que le produit existe
+        log.info("Création tentative - clientId={}, produitId={}, période={} → {}",
+                clientId, request.getProductId(), request.getStartDate(), request.getEndDate());
+
+        // Je vérifie si le produit demandé existe
         Product product = productDao.findById(request.getProductId())
-                .orElseThrow(() -> new RuntimeException("Produit non trouvé"));
+                .orElseThrow(() -> {
+                    log.warn("Produit introuvable : id={}", request.getProductId());
+                    return new BusinessException("Produit introuvable");
+                });
 
-        // 2. Je vérifie que le client existe
+        // Je vérifie si le client existe
         User client = userDao.findById(clientId)
-                .orElseThrow(() -> new RuntimeException("Client non trouvé"));
+                .orElseThrow(() -> {
+                    log.warn("Client introuvable : id={}", clientId);
+                    return new BusinessException("Client introuvable");
+                });
 
-        // 3. Je vérifie que le rôle de l'utilisateur est bien CLIENT
+        // Je vérifie que l'utilisateur est bien un client
         if (client.getRole() != Role.CLIENT) {
-            throw new RuntimeException("Seuls les clients peuvent réserver des produits");
+            log.warn("Rôle invalide pour réservation - userId={}, rôle={}", client.getId(), client.getRole());
+            throw new BusinessException("Seuls les clients peuvent réserver des produits");
         }
 
-        // 4. Vérification des dates de location
-        LocalDate start = request.getStartDate();
-        LocalDate end = request.getEndDate();
-
-        if (start.isAfter(end)) {
-            throw new RuntimeException("La date de début doit être avant la date de fin");
+        // Je vérifie la cohérence des dates
+        if (request.getStartDate().isAfter(request.getEndDate())) {
+            log.warn("Dates incohérentes - start={}, end={}", request.getStartDate(), request.getEndDate());
+            throw new BusinessException("La date de début doit être avant la date de fin");
         }
 
-        // 5. Vérifie si le produit est déjà réservé sur cette période
-        // Une location est en conflit si :
-        // - une réservation commence avant ou pendant la fin demandée
-        // - et se termine après ou pendant le début demandé
+        // Je vérifie si le produit est déjà réservé sur cette période
         boolean isAvailable = rentalDao
                 .findByProductIdAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
-                        product.getId(), end, start
-                ).isEmpty(); // s’il n’y a rien, alors c’est dispo
+                        product.getId(), request.getEndDate(), request.getStartDate()
+                ).isEmpty();
 
         if (!isAvailable) {
-            throw new RuntimeException("Le produit est déjà réservé sur cette période");
+            log.warn("Conflit de réservation - produitId={}, période={} → {}",
+                    product.getId(), request.getStartDate(), request.getEndDate());
+            throw new BusinessException("Le produit est déjà réservé sur cette période");
         }
 
-        // 6. Création de la réservation
+        // Je construis l’objet location
         Rental rental = new Rental();
         rental.setProduct(product);
         rental.setClient(client);
-        rental.setStartDate(start);
-        rental.setEndDate(end);
-        rental.setStatus(RentalStatus.PENDING); // statut par défaut
+        rental.setStartDate(request.getStartDate());
+        rental.setEndDate(request.getEndDate());
+        rental.setStatus(RentalStatus.PENDING);
         rental.setCreatedAt(LocalDateTime.now());
+
+        log.info("Location créée avec succès - rentalId temporaire=nouveau, clientId={}, produitId={}",
+                clientId, product.getId());
 
         return rentalDao.save(rental);
     }
 
     /**
-     * Méthode pour récupérer toutes les locations visibles par un utilisateur.
-     * - Un ADMIN ou un TECH voit tout
-     * - Un CLIENT ne voit que ses propres réservations
+     * Renvoie toutes les locations visibles par un utilisateur selon son rôle.
+     * - CLIENT : uniquement ses locations
+     * - ADMIN / TECH : toutes
      */
     public List<Rental> findAllAccessibleBy(User user) {
+        log.info("Liste des locations récupérée pour userId={}, rôle={}", user.getId(), user.getRole());
         if (user.getRole() == Role.CLIENT) {
             return rentalDao.findByClientId(user.getId());
         }
@@ -89,76 +102,81 @@ public class RentalService {
     }
 
     /**
-     * Permet de récupérer une réservation par ID.
+     * Permet de récupérer une location par son ID.
      */
     public Optional<Rental> findById(int id) {
+        log.debug("Recherche location par ID - rentalId={}", id);
         return rentalDao.findById((long) id);
     }
 
     /**
-     * Vérifie si un utilisateur a accès à une location.
-     * - Un CLIENT ne peut accéder qu’à ses propres réservations
-     * - Un TECH ou ADMIN peut voir toutes les locations
+     * Vérifie si l'utilisateur connecté a le droit d'accéder à une location.
+     * Un client ne peut voir que ses propres locations.
      */
     public boolean canAccessRental(User user, Rental rental) {
+        log.debug("Vérification accès location - userId={}, rentalId={}, résultat={}",
+                user.getId(), rental.getId(), user.getRole() != Role.CLIENT || rental.getClient().getId().equals(user.getId()));
         return user.getRole() != Role.CLIENT || rental.getClient().getId().equals(user.getId());
     }
 
     /**
-     * Met à jour une location.
-     * Je vérifie que la réservation existe, que l’utilisateur est autorisé,
-     * puis je mets à jour les dates (simple, sans gestion de conflit ici).
+     * Met à jour une location si l'utilisateur y est autorisé.
+     * Retourne un Optional avec la location mise à jour, ou vide sinon.
      */
-    public ResponseEntity<?> updateRental(int rentalId, User currentUser, RentalRequestDto dto) {
+    public Optional<Rental> updateRentalWithResult(int rentalId, User currentUser, RentalRequestDto dto) {
+        log.info("Mise à jour demandée - rentalId={}, userId={}, rôle={}, période={} → {}",
+                rentalId, currentUser.getId(), currentUser.getRole(), dto.getStartDate(), dto.getEndDate());
+
         Optional<Rental> optional = rentalDao.findById((long) rentalId);
 
         if (optional.isEmpty()) {
-            return ResponseEntity.status(404).body("Location non trouvée.");
+            log.warn("Location non trouvée - rentalId={}", rentalId);
+            return Optional.empty();
         }
 
         Rental rental = optional.get();
 
-        // Seuls les TECH ou ADMIN peuvent modifier une réservation
         if (currentUser.getRole() == Role.TECH || currentUser.getRole() == Role.ADMIN) {
             rental.setStartDate(dto.getStartDate());
             rental.setEndDate(dto.getEndDate());
-            rental.setStatus(RentalStatus.PENDING); // reset du statut si modifié
+            rental.setStatus(RentalStatus.PENDING);
 
             rentalDao.save(rental);
-            return ResponseEntity.status(204).build(); // No Content
+            log.info("Location mise à jour avec succès - rentalId={}", rentalId);
+            return Optional.of(rental);
         }
 
-        return ResponseEntity.status(403).body("Vous n'avez pas les droits pour modifier cette location.");
+        log.warn("Mise à jour refusée - userId={} n'a pas les droits pour rentalId={}", currentUser.getId(), rentalId);
+        return Optional.empty();
     }
 
     /**
-     * Supprime une location.
-     * - Un ADMIN peut tout supprimer
-     * - Un TECH peut supprimer les locations qu’il a créées (ou selon logique métier)
+     * Supprime une location si l'utilisateur y est autorisé.
+     * Retourne true si suppression faite, false sinon.
      */
-    public ResponseEntity<?> deleteRental(int rentalId, User currentUser) {
+    public boolean deleteRental(int rentalId, User currentUser) {
+        log.info("Suppression demandée - rentalId={}, userId={}, rôle={}", rentalId, currentUser.getId(), currentUser.getRole());
+
         Optional<Rental> optional = rentalDao.findById((long) rentalId);
 
         if (optional.isEmpty()) {
-            return ResponseEntity.status(404).body("Location non trouvée.");
+            log.warn("Location à supprimer non trouvée - rentalId={}", rentalId);
+            return false;
         }
 
         Rental rental = optional.get();
 
-        // ADMIN peut tout supprimer, TECH seulement ce qu’il a créé
-        if (currentUser.getRole() == Role.ADMIN ||
-                (currentUser.getRole() == Role.TECH &&
-                        rental.getClient().getId().equals(currentUser.getId()))) {
+        boolean isAdmin = currentUser.getRole() == Role.ADMIN;
+        boolean isOwnerTech = currentUser.getRole() == Role.TECH &&
+                rental.getClient().getId().equals(currentUser.getId());
 
+        if (isAdmin || isOwnerTech) {
             rentalDao.deleteById(rental.getId());
-            return ResponseEntity.noContent().build();
+            log.info("Location supprimée - rentalId={}, supprimée par userId={}", rental.getId(), currentUser.getId());
+            return true;
         }
 
-        return ResponseEntity.status(403).body("Vous n'avez pas les droits pour supprimer cette location.");
+        log.warn("Suppression refusée - userId={} n’a pas le droit de supprimer rentalId={}", currentUser.getId(), rentalId);
+        return false;
     }
 }
-
-//Ce service gère toute la logique liée aux réservations.
-//Il vérifie les rôles, la disponibilité du produit, les droits d'accès,
-//et applique une politique claire pour les actions selon les profils utilisateurs.
-//Le code est structuré, commenté, et maintenable.
