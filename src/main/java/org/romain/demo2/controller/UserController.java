@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.romain.demo2.dao.UserDao;
 import org.romain.demo2.dto.UserCreationDto;
+import org.romain.demo2.dto.UserDto;
 import org.romain.demo2.model.Role;
 import org.romain.demo2.model.User;
 import org.romain.demo2.security.*;
@@ -64,8 +65,11 @@ public class UserController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Liste des clients récupérée avec succès")
     })
-    public List<User> getClients() {
-        return userDao.findByRole(Role.CLIENT);
+    public List<UserDto> getClients() {
+        return userDao.findByRole(Role.CLIENT)
+                .stream()
+                .map(UserDto::from) // conversion User → UserDto
+                .toList();
     }
 
     /**
@@ -101,7 +105,7 @@ public class UserController {
             @ApiResponse(responseCode = "500", description = "Erreur interne si utilisateur non trouvé dans le token")
     })
     @IsConnected
-    public ResponseEntity<User> getCurrentUser() {
+    public ResponseEntity<UserDto> getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (!(authentication.getPrincipal() instanceof AppUserDetails userDetails)) {
@@ -109,9 +113,10 @@ public class UserController {
             return ResponseEntity.status(500).build();
         }
 
-        User currentUser = userDetails.getUser();
-        return ResponseEntity.ok(currentUser);
+        // Conversion sécurisée vers UserDto via la méthode from()
+        return ResponseEntity.ok(UserDto.from(userDetails.getUser()));
     }
+
 
     /**
      * Crée un nouvel utilisateur à partir des données fournies dans le DTO.
