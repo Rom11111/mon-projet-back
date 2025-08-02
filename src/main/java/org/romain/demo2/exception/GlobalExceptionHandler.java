@@ -23,6 +23,13 @@ public class GlobalExceptionHandler {
                 .body(new ApiResponseDto<>(e.getMessage(), null));
     }
 
+    // Gère les erreurs de ressource introuvable (ex : produit inexistant)
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ApiResponseDto<Void>> handleNotFound(ResourceNotFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ApiResponseDto<>(e.getMessage(), null));
+    }
+
     // Gère les erreurs de validation (ex : champ manquant ou date invalide)
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponseDto<Map<String, String>>> handleValidation(MethodArgumentNotValidException ex) {
