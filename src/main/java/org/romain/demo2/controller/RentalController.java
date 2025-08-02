@@ -6,17 +6,18 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.romain.demo2.dto.ApiResponseDto;
+import org.romain.demo2.dto.RentalResponseDto;
 import org.romain.demo2.dto.RentalRequestDto;
 import org.romain.demo2.model.Rental;
 import org.romain.demo2.security.AppUserDetails;
 import org.romain.demo2.security.IsClient;
 import org.romain.demo2.security.IsTech;
-
 import org.romain.demo2.service.RentalService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
 
 import java.util.List;
 import java.util.Optional;
@@ -35,9 +36,9 @@ public class RentalController {
     }
 
     /**
-     * Liste toutes les locations accessibles selon le rôle :
-     * - CLIENT : ses propres locations
-     * - TECH / ADMIN : toutes
+     * Liste toutes les locations accessibles selon le rôle de l'utilisateur connecté :
+     * - CLIENT : ne voit que ses propres locations
+     * - TECH / ADMIN : voit toutes les locations
      */
     @GetMapping
     @Operation(summary = "Lister les locations")
@@ -45,23 +46,37 @@ public class RentalController {
             @ApiResponse(responseCode = "200", description = "Liste récupérée avec succès")
     })
     public ResponseEntity<?> getAll(@AuthenticationPrincipal AppUserDetails userDetails) {
-        List<Rental> rentals = rentalService.findAllAccessibleBy(userDetails.getUser());
-        return ResponseEntity.ok(new ApiResponseDto<>("Liste des locations récupérée.", rentals));
+        // Récupération de l'utilisateur actuellement connecté
+        var user = userDetails.getUser();
+
+        // On récupère les locations auxquelles l'utilisateur a accès (filtrage fait dans le service)
+        List<Rental> rentals = rentalService.findAllAccessibleBy(user);
+
+        // On convertit les entités Rental en DTO (pour ne pas exposer tout l'objet)
+        List<RentalResponseDto> rentalDtos = rentals.stream()
+                .map(RentalResponseDto::from) // ✅ Méthode référence simple et propre
+                .toList();
+
+        // On retourne un objet de réponse standard contenant un message + la liste
+        return ResponseEntity.ok(
+                new ApiResponseDto<>("Liste des locations récupérée.", rentalDtos)
+        );
     }
+
 
 
     /**
      * Récupère une location par son ID si l'utilisateur a le droit.
      */
-    @GetMapping("/{id}")
+    @GetMapping("/{rentalId}")
     @Operation(summary = "Voir une location par ID")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Location trouvée"),
             @ApiResponse(responseCode = "403", description = "Accès interdit"),
             @ApiResponse(responseCode = "404", description = "Location non trouvée")
     })
-    public ResponseEntity<?> getById(@PathVariable int id, @AuthenticationPrincipal AppUserDetails userDetails) {
-        Optional<Rental> optional = rentalService.findById(id);
+    public ResponseEntity<?> getById(@PathVariable("rentalId") int rentalId, @AuthenticationPrincipal AppUserDetails userDetails) {
+        Optional<Rental> optional = rentalService.findById(rentalId);
 
         if (optional.isEmpty()) {
             return ResponseEntity.status(404).body(new ApiResponseDto<>("Location introuvable.", null));
@@ -72,8 +87,10 @@ public class RentalController {
             return ResponseEntity.status(403).body(new ApiResponseDto<>("Vous n'avez pas accès à cette location.", null));
         }
 
-        return ResponseEntity.ok(new ApiResponseDto<>("Location trouvée.", rental));
+        return ResponseEntity.ok(new ApiResponseDto<>("Location trouvée.", RentalResponseDto.from(rental)));
+
     }
+
 
     /**
      * Crée une nouvelle location (réservé aux clients).
@@ -98,7 +115,7 @@ public class RentalController {
     /**
      * Met à jour une location existante (réservé au TECH ou ADMIN).
      */
-    @PutMapping("/{id}")
+    @PutMapping("/{rentalId}")
     @IsTech
     @Operation(summary = "Mettre à jour une location")
     @ApiResponses({
@@ -106,10 +123,10 @@ public class RentalController {
             @ApiResponse(responseCode = "403", description = "Interdit"),
             @ApiResponse(responseCode = "404", description = "Location non trouvée")
     })
-    public ResponseEntity<?> update(@PathVariable int id,
+    public ResponseEntity<?> update(@PathVariable("rentalId") int rentalId,
                                     @RequestBody @Valid RentalRequestDto dto,
                                     @AuthenticationPrincipal AppUserDetails userDetails) {
-        Optional<Rental> updated = rentalService.updateRentalWithResult(id, userDetails.getUser(), dto);
+        Optional<Rental> updated = rentalService.updateRentalWithResult(rentalId, userDetails.getUser(), dto);
 
         if (updated.isEmpty()) {
             return ResponseEntity.status(404).body(new ApiResponseDto<>("Location introuvable ou accès interdit.", null));
@@ -121,7 +138,7 @@ public class RentalController {
     /**
      * Supprime une location (ADMIN ou TECH propriétaire).
      */
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{rentalId}")
     @IsTech
     @Operation(summary = "Supprimer une location")
     @ApiResponses({
@@ -129,9 +146,9 @@ public class RentalController {
             @ApiResponse(responseCode = "403", description = "Non autorisé"),
             @ApiResponse(responseCode = "404", description = "Introuvable")
     })
-    public ResponseEntity<?> delete(@PathVariable int id,
+    public ResponseEntity<?> delete(@PathVariable("rentalId") int rentalId,
                                     @AuthenticationPrincipal AppUserDetails userDetails) {
-        boolean deleted = rentalService.deleteRental(id, userDetails.getUser());
+        boolean deleted = rentalService.deleteRental(rentalId, userDetails.getUser());
 
         if (!deleted) {
             return ResponseEntity.status(403).body(new ApiResponseDto<>("Suppression non autorisée ou location introuvable.", null));
