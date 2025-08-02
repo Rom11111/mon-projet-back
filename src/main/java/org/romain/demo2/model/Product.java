@@ -54,4 +54,10 @@ public class Product {
 
     @JsonView(ProductViews.Client.class)
     protected String imageName;
+
+    // champ pour activer/désactiver un produit
+    @Column(nullable = false)
+    @JsonView(ProductViews.Client.class) // visible par tous
+    protected boolean available = true;
+
 }

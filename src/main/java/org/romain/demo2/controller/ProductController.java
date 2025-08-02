@@ -1,12 +1,17 @@
 package org.romain.demo2.controller;
 
 import com.fasterxml.jackson.annotation.JsonView;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import org.romain.demo2.annotation.ValidFile;
 import org.romain.demo2.dao.ProductDao;
+import org.romain.demo2.dto.ApiResponseDto;
 import org.romain.demo2.model.Etat;
 import org.romain.demo2.model.Product;
 import org.romain.demo2.security.*;
+import org.romain.demo2.service.ProductService;
 import org.romain.demo2.service.ServiceFile;
 import org.romain.demo2.view.ProductViews;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,13 +41,15 @@ public class ProductController {
     protected ProductDao productDao;
     protected ISecurityUtils securityUtils;
     protected ServiceFile serviceFile;
+    protected ProductService productService;
 
     //@Autowired //Fait le lien avec la dépendence ProduitDao
     @Autowired
-    public ProductController(ProductDao productDao, ISecurityUtils securityUtils, ServiceFile serviceFile) {
+    public ProductController(ProductDao productDao, ISecurityUtils securityUtils, ServiceFile serviceFile, ProductService productService) {
         this.productDao = productDao;
         this.securityUtils = securityUtils;
         this.serviceFile = serviceFile;
+        this.productService = productService;
     }
 
     @GetMapping("/admin/products")
@@ -201,4 +208,21 @@ public class ProductController {
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
+    @PatchMapping("/admin/product/{id}/toggle-availability")
+    @IsTech
+    @Operation(
+            summary = "Activer ou désactiver un produit",
+            description = "Inverse la disponibilité d’un produit. Accessible uniquement aux admins."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Disponibilité mise à jour avec succès"),
+            @ApiResponse(responseCode = "404", description = "Produit introuvable"),
+            @ApiResponse(responseCode = "403", description = "Accès interdit (non admin)")
+    })
+    public ResponseEntity<ApiResponseDto<Product>> toggleAvailability(@PathVariable Integer id) {
+        Product updatedProduct = productService.toggleAvailability(id);
+        return ResponseEntity.ok(
+                new ApiResponseDto<>("Disponibilité mise à jour", updatedProduct)
+        );
+    }
 }
