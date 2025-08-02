@@ -3,6 +3,7 @@ package org.romain.demo2.controller;
 import jakarta.validation.Valid;
 import org.romain.demo2.dao.UserDao;
 import org.romain.demo2.dto.EmailValidationDto;
+import org.romain.demo2.dto.LoginRequestDto;
 import org.romain.demo2.model.Role;
 import org.romain.demo2.model.User;
 import org.romain.demo2.security.AppUserDetails;
@@ -61,23 +62,19 @@ public class AuthController {
     }
 
 
-    @PostMapping("/login") // Gère la connection
-    public ResponseEntity<String> login(@RequestBody User user) {
-
+    @PostMapping("/login")
+    public ResponseEntity<String> login(@RequestBody @Valid LoginRequestDto dto) {
         try {
             AppUserDetails userDetails = (AppUserDetails) authenticationProvider.authenticate(
-                            new UsernamePasswordAuthenticationToken(
-                                    user.getEmail(),
-                                    user.getPassword()))
-                    .getPrincipal();
+                    new UsernamePasswordAuthenticationToken(dto.email(), dto.password())
+            ).getPrincipal();
 
-            return new ResponseEntity<>(securityUtils.generateToken(userDetails), HttpStatus.OK);
-
+            return ResponseEntity.ok(securityUtils.generateToken(userDetails));
         } catch (AuthenticationException e) {
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED); // fait une erreur 401 si le User n'est pas connecté
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-
     }
+
 
 
     @PostMapping("/validate-email")
