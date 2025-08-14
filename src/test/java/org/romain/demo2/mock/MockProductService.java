@@ -10,7 +10,7 @@ class MockProductService extends ProductService {
     }
 
     @Override
-    public Product toggleAvailability(Integer id) {
+    public Product toggleAvailability(Long id) {
         Product p = new Product();
         p.setId(id);
         p.setAvailable(true); // valeur fictive pour ton test

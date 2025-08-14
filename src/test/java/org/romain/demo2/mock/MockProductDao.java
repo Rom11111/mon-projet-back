@@ -16,9 +16,7 @@ import java.util.function.Function;
 public class MockProductDao implements ProductDao {
 
     @Override
-    public void flush() {
-
-    }
+    public void flush() {}
 
     @Override
     public <S extends Product> S saveAndFlush(S entity) {
@@ -31,32 +29,26 @@ public class MockProductDao implements ProductDao {
     }
 
     @Override
-    public void deleteAllInBatch(Iterable<Product> entities) {
-
-    }
+    public void deleteAllInBatch(Iterable<Product> entities) {}
 
     @Override
-    public void deleteAllByIdInBatch(Iterable<Integer> integers) {
-
-    }
+    public void deleteAllByIdInBatch(Iterable<Long> ids) {}
 
     @Override
-    public void deleteAllInBatch() {
-
-    }
+    public void deleteAllInBatch() {}
 
     @Override
-    public Product getOne(Integer integer) {
+    public Product getOne(Long id) {
         return null;
     }
 
     @Override
-    public Product getById(Integer integer) {
+    public Product getById(Long id) {
         return null;
     }
 
     @Override
-    public Product getReferenceById(Integer integer) {
+    public Product getReferenceById(Long id) {
         return null;
     }
 
@@ -106,23 +98,22 @@ public class MockProductDao implements ProductDao {
     }
 
     @Override
-    public Optional<Product> findById(Integer integer) {
-
-        User FakeUser = new User();
-        FakeUser.setId(1);
+    public Optional<Product> findById(Long id) {
+        User fakeUser = new User();
+        fakeUser.setId(1L);
 
         Product fakeProduct = new Product();
-        fakeProduct.setId(integer);
-        fakeProduct.setCreator(FakeUser);
+        fakeProduct.setId(id);
+        fakeProduct.setCreator(fakeUser);
 
-        if (integer == 1) {
+        if (id.equals(1L)) {
             return Optional.of(fakeProduct);
         }
         return Optional.empty();
     }
 
     @Override
-    public boolean existsById(Integer integer) {
+    public boolean existsById(Long id) {
         return false;
     }
 
@@ -132,7 +123,7 @@ public class MockProductDao implements ProductDao {
     }
 
     @Override
-    public List<Product> findAllById(Iterable<Integer> integers) {
+    public List<Product> findAllById(Iterable<Long> ids) {
         return List.of();
     }
 
@@ -142,29 +133,19 @@ public class MockProductDao implements ProductDao {
     }
 
     @Override
-    public void deleteById(Integer integer) {
-
-    }
+    public void deleteById(Long id) {}
 
     @Override
-    public void delete(Product entity) {
-
-    }
+    public void delete(Product entity) {}
 
     @Override
-    public void deleteAllById(Iterable<? extends Integer> integers) {
-
-    }
+    public void deleteAllById(Iterable<? extends Long> ids) {}
 
     @Override
-    public void deleteAll(Iterable<? extends Product> entities) {
-
-    }
+    public void deleteAll(Iterable<? extends Product> entities) {}
 
     @Override
-    public void deleteAll() {
-
-    }
+    public void deleteAll() {}
 
     @Override
     public List<Product> findAll(Sort sort) {
