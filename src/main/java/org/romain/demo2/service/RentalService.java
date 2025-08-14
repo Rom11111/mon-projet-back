@@ -16,6 +16,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.romain.demo2.dao.ReportDao;
+import org.romain.demo2.model.ReportStatus;
+import org.romain.demo2.model.Report;
+
 @Service
 @RequiredArgsConstructor
 public class RentalService {
@@ -23,6 +27,7 @@ public class RentalService {
     private final RentalDao rentalDao;
     private final ProductDao productDao;
     private final UserDao userDao;
+    private final ReportDao reportDao;
 
     // Logger pour suivre ce qui se passe côté serveur
     private static final Logger log = LoggerFactory.getLogger(RentalService.class);
@@ -31,18 +36,18 @@ public class RentalService {
      * Crée une nouvelle location après toutes les vérifications métier.
      * Je vérifie : produit existant, client valide, dates cohérentes, produit dispo.
      */
-    public Rental createRental(RentalRequestDto request, Integer clientId) {
+    public Rental createRental(RentalRequestDto request, Long clientId) {
         log.info("Création tentative - clientId={}, produitId={}, période={} → {}",
                 clientId, request.getProductId(), request.getStartDate(), request.getEndDate());
 
-        // Je vérifie si le produit demandé existe
+        // Vérifie si le produit demandé existe
         Product product = productDao.findById(request.getProductId())
                 .orElseThrow(() -> {
                     log.warn("Produit introuvable : id={}", request.getProductId());
                     return new BusinessException("Produit introuvable");
                 });
 
-        // Je vérifie si le client existe
+        // Vérifie si le client existe
         User client = userDao.findById(clientId)
                 .orElseThrow(() -> {
                     log.warn("Client introuvable : id={}", clientId);
@@ -55,22 +60,29 @@ public class RentalService {
             throw new BusinessException("Seuls les clients peuvent réserver des produits");
         }
 
-        // Je vérifie la cohérence des dates
+        // Vérifie la quantité demandée
+        if (request.getQuantity() == null || request.getQuantity() < 1) {
+            log.warn("Quantité invalide - valeur={}", request.getQuantity());
+            throw new BusinessException("La quantité doit être au moins de 1.");
+        }
+
+        // Vérifie la cohérence des dates
         if (request.getStartDate().isAfter(request.getEndDate())) {
             log.warn("Dates incohérentes - start={}, end={}", request.getStartDate(), request.getEndDate());
             throw new BusinessException("La date de début doit être avant la date de fin");
         }
 
-        // Je vérifie si le produit est déjà réservé sur cette période
-        boolean isAvailable = rentalDao
-                .findByProductIdAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
-                        product.getId(), request.getEndDate(), request.getStartDate()
-                ).isEmpty();
+        // Vérifie le stock disponible sur la période
+        int reserved = rentalDao.sumQuantityForProductBetweenDates(
+                product.getId(),
+                request.getStartDate(),
+                request.getEndDate()
+        );
+        int available = product.getStock() - reserved;
 
-        if (!isAvailable) {
-            log.warn("Conflit de réservation - produitId={}, période={} → {}",
-                    product.getId(), request.getStartDate(), request.getEndDate());
-            throw new BusinessException("Le produit est déjà réservé sur cette période");
+        if (request.getQuantity() > available) {
+            log.warn("Stock insuffisant - demandé={}, dispo sur période={}", request.getQuantity(), available);
+            throw new BusinessException("Stock insuffisant : il reste " + available + " unité(s) disponibles sur cette période.");
         }
 
         // Je construis l’objet location
@@ -81,6 +93,7 @@ public class RentalService {
         rental.setEndDate(request.getEndDate());
         rental.setStatus(RentalStatus.PENDING);
         rental.setCreatedAt(LocalDateTime.now());
+        rental.setQuantity(request.getQuantity());
 
         log.info("Location créée avec succès - rentalId temporaire=nouveau, clientId={}, produitId={}",
                 clientId, product.getId());
@@ -104,9 +117,9 @@ public class RentalService {
     /**
      * Permet de récupérer une location par son ID.
      */
-    public Optional<Rental> findById(int id) {
+    public Optional<Rental> findById(Long id) {
         log.debug("Recherche location par ID - rentalId={}", id);
-        return rentalDao.findById((long) id);
+        return rentalDao.findById(id);
     }
 
     /**
@@ -123,11 +136,11 @@ public class RentalService {
      * Met à jour une location si l'utilisateur y est autorisé.
      * Retourne un Optional avec la location mise à jour, ou vide sinon.
      */
-    public Optional<Rental> updateRentalWithResult(int rentalId, User currentUser, RentalRequestDto dto) {
+    public Optional<Rental> updateRentalWithResult(Long rentalId, User currentUser, RentalRequestDto dto) {
         log.info("Mise à jour demandée - rentalId={}, userId={}, rôle={}, période={} → {}",
                 rentalId, currentUser.getId(), currentUser.getRole(), dto.getStartDate(), dto.getEndDate());
 
-        Optional<Rental> optional = rentalDao.findById((long) rentalId);
+        Optional<Rental> optional = rentalDao.findById(rentalId);
 
         if (optional.isEmpty()) {
             log.warn("Location non trouvée - rentalId={}", rentalId);
@@ -151,13 +164,34 @@ public class RentalService {
     }
 
     /**
+     * Met à jour uniquement le statut d'une location (APPROVED, REJECTED, etc.).
+     * Réservé aux rôles techniques (ADMIN / TECH).
+     *
+     * @param rentalId   l'identifiant de la location à modifier
+     * @param newStatus  le nouveau statut à appliquer
+     * @return la location mise à jour avec le nouveau statut
+     * @throws BusinessException si la location n'existe pas
+     */
+    public Rental updateStatus(Long rentalId, RentalStatus newStatus) {
+        // Je cherche la location par son ID, sinon je lance une erreur métier claire
+        Rental rental = rentalDao.findById(rentalId)
+                .orElseThrow(() -> new BusinessException("Location introuvable"));
+
+        // Je mets à jour uniquement le statut
+        rental.setStatus(newStatus);
+
+        // J'enregistre la modification en base et je retourne l'objet mis à jour
+        return rentalDao.save(rental);
+    }
+
+    /**
      * Supprime une location si l'utilisateur y est autorisé.
      * Retourne true si suppression faite, false sinon.
      */
-    public boolean deleteRental(int rentalId, User currentUser) {
+    public boolean deleteRental(Long rentalId, User currentUser) {
         log.info("Suppression demandée - rentalId={}, userId={}, rôle={}", rentalId, currentUser.getId(), currentUser.getRole());
 
-        Optional<Rental> optional = rentalDao.findById((long) rentalId);
+        Optional<Rental> optional = rentalDao.findById(rentalId);
 
         if (optional.isEmpty()) {
             log.warn("Location à supprimer non trouvée - rentalId={}", rentalId);
@@ -178,5 +212,40 @@ public class RentalService {
 
         log.warn("Suppression refusée - userId={} n’a pas le droit de supprimer rentalId={}", currentUser.getId(), rentalId);
         return false;
+    }
+
+    public Report reportProduct(Long rentalId, Long clientId, String description) {
+        log.info("Signalement demandé - rentalId={}, clientId={}", rentalId, clientId);
+
+        Rental rental = rentalDao.findById(rentalId)
+                .orElseThrow(() -> {
+                    log.warn("Location introuvable - rentalId={}", rentalId);
+                    return new BusinessException("Location introuvable");
+                });
+
+        User client = userDao.findById(clientId)
+                .orElseThrow(() -> {
+                    log.warn("Client introuvable - id={}", clientId);
+                    return new BusinessException("Client introuvable");
+                });
+
+        if (!rental.getClient().getId().equals(clientId)) {
+            log.warn("Signalement refusé - userId={} n'est pas le propriétaire de rentalId={}", clientId, rentalId);
+            throw new BusinessException("Vous ne pouvez signaler qu'une de vos propres locations");
+        }
+
+        Report report = Report.builder()
+                .rental(rental)
+                .reportedBy(client)
+                .description(description)
+                .status(ReportStatus.OPEN)
+                .build();
+
+        reportDao.save(report);
+
+        log.info("Signalement enregistré - reportId={}, rentalId={}, clientId={}",
+                report.getId(), rentalId, clientId);
+
+        return report;
     }
 }

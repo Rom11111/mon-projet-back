@@ -4,6 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.romain.demo2.dao.ProductDao;
 import org.romain.demo2.dao.RentalDao;
+import org.romain.demo2.dao.ReportDao;
 import org.romain.demo2.dao.UserDao;
 import org.romain.demo2.dto.RentalRequestDto;
 import org.romain.demo2.exception.BusinessException;
@@ -24,6 +25,7 @@ public class RentalServiceTest {
     private RentalDao rentalDao;
     private ProductDao productDao;
     private UserDao userDao;
+    private ReportDao reportDao;
 
     // Avant chaque test, je crée des mocks pour injecter dans le service
     @BeforeEach
@@ -31,7 +33,7 @@ public class RentalServiceTest {
         rentalDao = mock(RentalDao.class);
         productDao = mock(ProductDao.class);
         userDao = mock(UserDao.class);
-        rentalService = new RentalService(rentalDao, productDao, userDao);
+        rentalService = new RentalService(rentalDao, productDao, userDao, mock(ReportDao.class));
     }
 
     // Cas : produit inexistant → doit échouer
@@ -39,10 +41,10 @@ public class RentalServiceTest {
     void shouldFail_ifProductNotFound() {
         RentalRequestDto dto = validDto();
         when(productDao.findById(dto.getProductId())).thenReturn(Optional.empty());
-        when(userDao.findById(1)).thenReturn(Optional.of(validClient()));
+        when(userDao.findById(1L)).thenReturn(Optional.of(validClient()));
 
         BusinessException ex = assertThrows(BusinessException.class, () ->
-                rentalService.createRental(dto, 1));
+                rentalService.createRental(dto, 1L));
 
         assertEquals("Produit introuvable", ex.getMessage());
     }
@@ -52,10 +54,10 @@ public class RentalServiceTest {
     void shouldFail_ifClientNotFound() {
         RentalRequestDto dto = validDto();
         when(productDao.findById(dto.getProductId())).thenReturn(Optional.of(new Product()));
-        when(userDao.findById(1)).thenReturn(Optional.empty());
+        when(userDao.findById(1L)).thenReturn(Optional.empty());
 
         BusinessException ex = assertThrows(BusinessException.class, () ->
-                rentalService.createRental(dto, 1));
+                rentalService.createRental(dto, 1L));
 
         assertEquals("Client introuvable", ex.getMessage());
     }
@@ -67,12 +69,12 @@ public class RentalServiceTest {
         when(productDao.findById(dto.getProductId())).thenReturn(Optional.of(new Product()));
 
         User admin = new User();
-        admin.setId(1);
+        admin.setId(1L);
         admin.setRole(Role.ADMIN); // mauvais rôle
-        when(userDao.findById(1)).thenReturn(Optional.of(admin));
+        when(userDao.findById(1L)).thenReturn(Optional.of(admin));
 
         BusinessException ex = assertThrows(BusinessException.class, () ->
-                rentalService.createRental(dto, 1));
+                rentalService.createRental(dto, 1L));
 
         assertEquals("Seuls les clients peuvent réserver des produits", ex.getMessage());
     }
@@ -85,10 +87,10 @@ public class RentalServiceTest {
         dto.setEndDate(LocalDate.now().plusDays(1)); // incohérent
 
         when(productDao.findById(dto.getProductId())).thenReturn(Optional.of(new Product()));
-        when(userDao.findById(1)).thenReturn(Optional.of(validClient()));
+        when(userDao.findById(1L)).thenReturn(Optional.of(validClient()));
 
         BusinessException ex = assertThrows(BusinessException.class, () ->
-                rentalService.createRental(dto, 1));
+                rentalService.createRental(dto, 1L));
 
         assertEquals("La date de début doit être avant la date de fin", ex.getMessage());
     }
@@ -102,7 +104,7 @@ public class RentalServiceTest {
         product.setId(dto.getProductId()); // Obligatoire pour le test
 
         when(productDao.findById(dto.getProductId())).thenReturn(Optional.of(product));
-        when(userDao.findById(1)).thenReturn(Optional.of(validClient()));
+        when(userDao.findById(1L)).thenReturn(Optional.of(validClient()));
 
         // Simule une réservation existante (donc conflit)
         when(rentalDao.findByProductIdAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
@@ -110,7 +112,7 @@ public class RentalServiceTest {
         )).thenReturn(List.of(new Rental()));
 
         BusinessException ex = assertThrows(BusinessException.class, () ->
-                rentalService.createRental(dto, 1));
+                rentalService.createRental(dto, 1L));
 
         assertEquals("Le produit est déjà réservé sur cette période", ex.getMessage());
     }
@@ -131,7 +133,7 @@ public class RentalServiceTest {
 
         // Simule que le produit est dispo (pas de conflit)
         when(rentalDao.findByProductIdAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
-                anyInt(), any(), any())
+                anyLong(), any(), any())
         ).thenReturn(List.of());
 
         // Simule que la location est bien enregistrée
@@ -159,7 +161,7 @@ public class RentalServiceTest {
     // Je crée une demande de location valide
     private RentalRequestDto validDto() {
         RentalRequestDto dto = new RentalRequestDto();
-        dto.setProductId(1);
+        dto.setProductId(1L);
         dto.setStartDate(LocalDate.now().plusDays(1));
         dto.setEndDate(LocalDate.now().plusDays(3));
         return dto;
@@ -168,7 +170,7 @@ public class RentalServiceTest {
     // Je crée un client avec un rôle valide
     private User validClient() {
         User user = new User();
-        user.setId(1);
+        user.setId(1L);
         user.setRole(Role.CLIENT);
         return user;
     }

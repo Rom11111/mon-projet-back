@@ -2,6 +2,8 @@ package org.romain.demo2.dao;
 
 import org.romain.demo2.model.Rental;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
@@ -13,7 +15,7 @@ public interface RentalDao extends JpaRepository<Rental, Long> {
     /**
      * Retourne toutes les locations faites par un utilisateur donné (client).
      */
-    List<Rental> findByClientId(Integer clientId);
+    List<Rental> findByClientId(Long clientId);
 
     /**
      * Retourne les réservations qui chevauchent une période donnée pour un produit.
@@ -23,6 +25,19 @@ public interface RentalDao extends JpaRepository<Rental, Long> {
      * Si cette méthode retourne une liste non vide, alors le produit est déjà réservé.
      */
     List<Rental> findByProductIdAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
-            Integer productId, LocalDate end, LocalDate start
+            Long productId, LocalDate end, LocalDate start
+    );
+
+    @Query("""
+        SELECT COALESCE(SUM(r.quantity), 0)
+        FROM Rental r
+        WHERE r.product.id = :productId
+          AND r.startDate <= :endDate
+          AND r.endDate >= :startDate
+    """)
+    int sumQuantityForProductBetweenDates(
+            @Param("productId") Long productId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
     );
 }

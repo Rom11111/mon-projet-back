@@ -3,29 +3,54 @@ package org.romain.demo2.dto;
 import org.romain.demo2.model.Rental;
 import org.romain.demo2.model.RentalStatus;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
-// Ce DTO représente une location simplifiée à envoyer au frontend (Angular)
 public record RentalResponseDto(
-        Long id,                         // ID de la location
-        String productName,             // Nom du produit loué
-        LocalDate startDate,            // Date de début de la location
-        LocalDate endDate,              // Date de fin de la location
-        RentalStatus status,            // Statut de la location (PENDING, APPROVED, etc.)
-        LocalDateTime createdAt         // Date de création de la réservation
+        Long id,                // ID de la location
+        Long productId,         // ID du produit loué
+        Long clientId,          // ID du client
+        String productName,     // Nom du produit
+        String clientFirstname, // Prénom du client
+        String clientLastname,  // Nom du client
+        LocalDate startDate,    // Date de début
+        LocalDate endDate,      // Date de fin
+        RentalStatus status,    // Statut de la location
+        LocalDateTime reservationDate, // Date de réservation
+        Integer quantity,       // Quantité louée
+        BigDecimal price,       // Prix unitaire du produit
+        BigDecimal total        // Prix total = prix * quantité * jours
 ) {
-
-    // Méthode utilitaire pour transformer une entité Rental en RentalDto
     public static RentalResponseDto from(Rental rental) {
+        // Récupération du prix depuis le produit
+        BigDecimal price = rental.getProduct().getPrice();
+
+        // Calcul du nombre de jours entre début et fin
+        long days = ChronoUnit.DAYS.between(rental.getStartDate(), rental.getEndDate());
+        if (days <= 0) days = 1; // On facture minimum 1 jour
+
+        // Calcul du prix total : prix unitaire × quantité × jours
+        BigDecimal total = price
+                .multiply(BigDecimal.valueOf(rental.getQuantity()))
+                .multiply(BigDecimal.valueOf(days));
+
+        // Création du DTO
         return new RentalResponseDto(
-                rental.getId(),                         // Récupère l’ID
-                rental.getProduct().getName(),          // Nom du produit associé
-                rental.getStartDate(),                  // Date de début
-                rental.getEndDate(),                    // Date de fin
-                rental.getStatus(),                     // Statut
-                rental.getCreatedAt()                   // Date de création
+                rental.getId(),
+                rental.getProduct().getId(),
+                rental.getClient().getId(),
+                rental.getProduct().getName(),
+                rental.getClient().getFirstname(),
+                rental.getClient().getLastname(),
+                rental.getStartDate(),
+                rental.getEndDate(),
+                rental.getStatus(),
+                rental.getCreatedAt(),
+                rental.getQuantity(),
+                price,
+                total
         );
     }
 }
-

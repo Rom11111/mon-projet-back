@@ -1,6 +1,8 @@
 package org.romain.demo2.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -32,6 +34,7 @@ public class Rental {
     @JoinColumn(name = "client_id", referencedColumnName = "id", nullable = false)
     private User client;
 
+
     // Date de début de la location
     private LocalDate startDate;
 
@@ -44,6 +47,10 @@ public class Rental {
 
     // Date de création de la location
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    @NotNull(message = "La quantité est requise")
+    @Min(value = 1, message = "La quantité doit être au moins 1")
+    private Integer quantity;
 }
 
 
