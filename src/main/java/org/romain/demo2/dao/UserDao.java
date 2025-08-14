@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface UserDao extends JpaRepository<User, Integer> {
+public interface UserDao extends JpaRepository<User, Long> {
 
     Optional<User> findByEmail(String email); //Permet de récupérer un User par son Email
     Optional<User> findByEmailVerificationToken(String token);
