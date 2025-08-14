@@ -9,7 +9,7 @@ import java.util.Date;
  * DTO pour exposer uniquement les infos utiles et sûres d’un utilisateur.
  */
 public record UserDto(
-        Integer id,
+        Long id,
         String firstname,
         String lastname,
         String email,

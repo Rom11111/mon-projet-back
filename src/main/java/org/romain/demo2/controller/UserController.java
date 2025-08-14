@@ -83,7 +83,7 @@ public class UserController {
             @ApiResponse(responseCode = "200", description = "Utilisateur trouvé"),
             @ApiResponse(responseCode = "404", description = "Utilisateur non trouvé")
     })
-    public ResponseEntity<User> getById(@PathVariable int id) {
+    public ResponseEntity<User> getById(@PathVariable Long id) {
         return userDao.findById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -166,7 +166,7 @@ public class UserController {
             @ApiResponse(responseCode = "403", description = "Interdit de modifier cet utilisateur"),
             @ApiResponse(responseCode = "404", description = "Utilisateur non trouvé")
     })
-    public ResponseEntity<?> updateUser(@PathVariable int id, @RequestBody User updatedUser) {
+    public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody User updatedUser) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         AppUserDetails userDetails = (AppUserDetails) authentication.getPrincipal();
         User currentUser = userDetails.getUser();
@@ -205,7 +205,7 @@ public class UserController {
             @ApiResponse(responseCode = "400", description = "L'utilisateur est déjà inactif"),
             @ApiResponse(responseCode = "404", description = "Utilisateur non trouvé")
     })
-    public ResponseEntity<?> deactivateUser(@PathVariable int id) {
+    public ResponseEntity<?> deactivateUser(@PathVariable Long id) {
         // Récupère l'objet Authentication de Spring Security
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         // Cast vers ton UserDetails custom
@@ -239,7 +239,7 @@ public class UserController {
             @ApiResponse(responseCode = "400", description = "L'utilisateur est déjà actif"),
             @ApiResponse(responseCode = "404", description = "Utilisateur non trouvé")
     })
-    public ResponseEntity<?> reactivateUser(@PathVariable int id) {
+    public ResponseEntity<?> reactivateUser(@PathVariable Long id) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         AppUserDetails userDetails = (AppUserDetails) authentication.getPrincipal();
         User currentUser = userDetails.getUser();
@@ -257,7 +257,7 @@ public class UserController {
             @ApiResponse(responseCode = "204", description = "Utilisateur supprimé définitivement"),
             @ApiResponse(responseCode = "404", description = "Utilisateur non trouvé")
     })
-    public ResponseEntity<String> deleteUserPermanently(@PathVariable int id) {
+    public ResponseEntity<String> deleteUserPermanently(@PathVariable Long id) {
         boolean deleted = userService.deleteUserPermanently(id);
 
         if (deleted) {

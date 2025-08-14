@@ -61,7 +61,7 @@ public class UserService {
      * - un noContent() (204) si OK
      * - un message (String) si erreur
      */
-    public ResponseEntity<?> deactivateUser(User currentUser, int targetId) {
+    public ResponseEntity<?> deactivateUser(User currentUser, Long targetId) {
         return userDao.findById(targetId)
                 .map(targetUser -> {
                     if (targetUser.getRole() == Role.ADMIN) {
@@ -81,7 +81,7 @@ public class UserService {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    public ResponseEntity<?> reactivateUser(User currentUser, int targetId) {
+    public ResponseEntity<?> reactivateUser(User currentUser, Long targetId) {
         return userDao.findById(targetId)
                 .map(targetUser -> {
                     if (targetUser.getRole() == Role.ADMIN) {
@@ -108,7 +108,7 @@ public class UserService {
      * @param targetId ID de l'utilisateur à supprimer
      * @return true si supprimé, false si utilisateur non trouvé
      */
-    public boolean deleteUserPermanently(int targetId) {
+    public boolean deleteUserPermanently(Long targetId) {
         if (!userDao.existsById(targetId)) {
             return false;
         }
