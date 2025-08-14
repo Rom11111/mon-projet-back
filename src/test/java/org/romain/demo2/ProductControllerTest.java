@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.romain.demo2.controller.ProductController;
 import org.romain.demo2.mock.MockProductDao;
+import org.romain.demo2.mock.MockProductService;
 import org.romain.demo2.mock.MockSecurityUtils;
 import org.romain.demo2.model.Product;
 import org.romain.demo2.model.User;
@@ -28,44 +29,44 @@ public class ProductControllerTest {
 
     @Test
     void callGetWithExistingProduct_shouldSend200ok() {
-        ResponseEntity<Product> response = productController.get(1);
+        ResponseEntity<Product> response = productController.get(1L);
         Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
     }
 
     @Test
     void callGetWithExistingProduct_shouldSend404notFound() {
-        ResponseEntity<Product> response = productController.get(1);
+        ResponseEntity<Product> response = productController.get(1L);
         Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
     }
 
     @Test
     void deleteExistingProductBySellerOwner_shouldSend204noContent() {
         User fakeUser = new User();
-        fakeUser.setId(1);
+        fakeUser.setId(1L);
         AppUserDetails userDetails = new AppUserDetails(fakeUser);
 
-        ResponseEntity<Product> response = productController.delete(1, userDetails);
+        ResponseEntity<Product> response = productController.delete(1L, userDetails);
         Assertions.assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
     }
 
     @Test
     void deleteExistingProductByNotSeller_shouldSend403forbiden() {
         User fakeUser = new User();
-        fakeUser.setId(2);
+        fakeUser.setId(2L);
         AppUserDetails userDetails = new AppUserDetails(fakeUser);
 
-        ResponseEntity<Product> response = productController.delete(1, userDetails);
+        ResponseEntity<Product> response = productController.delete(1L, userDetails);
         Assertions.assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
     }
 
     @Test
     void deleteExistingProductByNotSellerOwner_shouldSend403forbiden() {
         User fakeUser = new User();
-        fakeUser.setId(2);
+        fakeUser.setId(2L);
         AppUserDetails userDetails = new AppUserDetails(fakeUser);
 
 
-        ResponseEntity<Product> response = productController.delete(1, userDetails);
+        ResponseEntity<Product> response = productController.delete(1L, userDetails);
         Assertions.assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
     }
 }
