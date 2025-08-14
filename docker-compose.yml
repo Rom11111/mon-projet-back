@@ -47,7 +47,7 @@ services:
     volumes:
       - data:/var/lib/mysql
     #    ports:
-    #      - "3306:3306" décommentez pour accéder a distance à la bdd
+    #      - "3306:3306" decommentez pour accéder a distance à la bdd
     networks:
       - backend-network
 

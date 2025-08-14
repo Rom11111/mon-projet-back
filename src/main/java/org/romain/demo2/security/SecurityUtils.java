@@ -3,6 +3,7 @@ package org.romain.demo2.security;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
@@ -16,7 +17,7 @@ public class SecurityUtils implements ISecurityUtils {
     @Override
     public String getRole(AppUserDetails userDetails) {
         return userDetails.getAuthorities().stream()
-                .map(r -> r.getAuthority())
+                .map(GrantedAuthority::getAuthority)
                 .findFirst()
                 .orElse(null);
     }
@@ -31,8 +32,6 @@ public class SecurityUtils implements ISecurityUtils {
                 .addClaims(Map.of("userId", userDetails.getUserId()))
                 .signWith(SignatureAlgorithm.HS256, jwtSecret)
                 .compact();
-
-
     }
 
     @Override

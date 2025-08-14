@@ -1,5 +1,6 @@
 package org.romain.demo2.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonView;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -8,7 +9,8 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.romain.demo2.view.ProductDisplayForClient;
+import org.romain.demo2.view.ProductViews;
+
 
 @Getter
 @Setter
@@ -19,36 +21,36 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    protected Integer id;
+    private Long id;
 
     @NotBlank(groups = UpdateGroup.class)
     @Column(nullable = false)
-    protected String firstname;
+    private String firstname;
 
     @NotBlank(groups = UpdateGroup.class)
     @Column(nullable = false)
-    @JsonView({ProductDisplayForClient.class})
-    protected String lastname;
+    private String lastname;
 
     @NotBlank(groups = RegistrationGroup.class)
     @Email
     @Column(unique = true, nullable = false)
-    protected String email;
+    private String email;
 
+    @JsonIgnore
     @NotBlank(groups = RegistrationGroup.class)
     @Column(nullable = false)
-    protected String password;
+    private String password;
 
     @Enumerated(EnumType.STRING)
     @Column(columnDefinition = "ENUM('CLIENT','TECH', 'ADMIN')")
-    protected Role role;
+    private Role role;
 
     @Column
     private String photoUrl;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private UserStatus userStatus = UserStatus.Active;
+    @Column(nullable = false, columnDefinition = "ENUM('ACTIVE', 'INACTIVE', 'PENDING', 'BLOCKED')")
+    private UserStatus userStatus = UserStatus.ACTIVE;
 
     @CreationTimestamp
     @Column(updatable = false)
@@ -59,15 +61,15 @@ public class User {
 
     @NotBlank(groups = UpdateGroup.class)
     @Column(nullable = false)
-    protected String company;
+    private String company;
 
     @NotBlank(groups = UpdateGroup.class)
     @Column(nullable = false)
-    protected String companyAddress;
+    private String companyAddress;
 
     @NotBlank(groups = UpdateGroup.class)
     @Column(nullable = false)
-    protected String phone;
+    private String phone;
 
-    protected String emailVerificationToken;
+    private String emailVerificationToken;
 }

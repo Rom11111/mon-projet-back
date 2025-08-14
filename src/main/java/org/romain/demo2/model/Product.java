@@ -1,69 +1,78 @@
 package org.romain.demo2.model;
 
-
 import com.fasterxml.jackson.annotation.JsonView;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.validator.constraints.Length;
-import org.romain.demo2.view.ProductDisplayForClient;
+import org.romain.demo2.view.ProductViews;
 
-import java.util.ArrayList;
+import java.math.BigDecimal;
 import java.util.List;
 
-// Un modèle structure les données
-@Getter // annotation
+@Getter
 @Setter
-@Entity // A la fois une classe et un objet
+@Entity
 public class Product {
 
-    @Id // Preciser quelle propriété a une clé primaire
-    @GeneratedValue(strategy = GenerationType.IDENTITY) //Stratégie à appliquer
-    protected Integer id;
-
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @JsonView(ProductViews.Client.class)
+    private Long id;
 
     @Column(nullable = false)
     @NotBlank
-    protected String name;
+    @JsonView(ProductViews.Client.class)
+    private String name;
 
-    @Column(length = 15, nullable = false  /* ne peut pas être nul */, unique = true) //force le changement de nom
-    @Length(max = 40, min = 3, message = "longueur entre 3 et 10"/* personalise le msg d'erreur */)
+    @Column(length = 15, nullable = false, unique = true)
+    @Length(max = 40, min = 3, message = "longueur entre 3 et 10")
     @NotBlank
-    protected String code;
+    @JsonView(ProductViews.Tech.class)
+    private String code;
 
-    @Column(columnDefinition = "TEXT") //pas de limite de caractères
-    protected String description;
+    @Column(columnDefinition = "TEXT")
+    @JsonView(ProductViews.Client.class)
+    private String description;
 
     @DecimalMin("0.1")
-    protected float price; // "f" prix peut être de 0 et "F" valeur par défaut null
+    @JsonView(ProductViews.Client.class)
+    private BigDecimal price;
 
     @ManyToOne
-    protected Etat etat;
-
-//    @ManyToMany
-//    @JoinTable(
-//            name = "product_label", // nom de la table de jointure
-//            joinColumns = @JoinColumn(name = "product_id"), // permet de modifier la colonne Product(je suis dans son entité)
-//            inverseJoinColumns = @JoinColumn(name = "label_id")
-//
-//    )
-//    protected List<Label> labelList = new ArrayList<>();
+    @JsonView(ProductViews.Tech.class)
+    private Etat etat;
 
     @ManyToOne
     @JoinColumn(name = "creator_id", nullable = false)
-    @JsonView({ProductDisplayForClient.class})
-    protected User creator;
+    @JsonView(ProductViews.Admin.class)
+    private User creator;
 
-    @ManyToOne
-    @JoinColumn(name = "category_id") // <-- colonne dans la table product
-    protected Category category;
+    // relation vers Category (ManyToOne)
+    // fetch=EAGER pour recevoir la catégorie sans surprise
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "category_id")
+    @JsonView(ProductViews.Client.class)
+    private Category category;
 
-    protected String location;
+    @JsonView(ProductViews.Client.class)
+    private String imageName;
 
-    @JsonView({ProductDisplayForClient.class})
-    String imageName;
+    @Column(nullable = false)
+    @JsonView(ProductViews.Client.class)
+    private boolean available = true;
 
+    @NotNull
+    @Min(0)
+    @JsonView(ProductViews.Tech.class)
+    private Integer stock;
 
+    // 📄 Relation 1:N avec la documentation du produit
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    // pas de @JsonView ici si tu veux gérer l'affichage dans un endpoint séparé
+    private List<ProductDocumentation> documentationList;
 }

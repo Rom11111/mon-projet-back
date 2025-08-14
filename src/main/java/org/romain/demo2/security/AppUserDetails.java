@@ -25,7 +25,7 @@ public class AppUserDetails implements UserDetails {
 
     }
 
-    public Integer getUserId() {
+    public Long getUserId() {
         return user.getId();
     }
 

@@ -1,101 +1,59 @@
 package org.romain.demo2.model;
+
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
- * Représente une location de produit dans le système.
+ * Représente une location d'un produit par un client sur une période donnée.
  */
+@Entity
 @Getter
 @Setter
-@Entity
+@NoArgsConstructor
 public class Rental {
 
+    // Identifiant unique généré automatiquement
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
-    /**
-     * Date effective de la location.
-     */
-    @NotNull
-    @Column(nullable = false)
-    private LocalDate date;
-
-    @NotNull
-    @ManyToOne(optional = false)
+    // Produit concerné par la location
+    @ManyToOne
+    @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
-    @NotNull
-    @Column(nullable = false)
-    private Double price;
+    // Client qui réserve (doit avoir le rôle CLIENT)
+    @ManyToOne
+    @JoinColumn(name = "client_id", referencedColumnName = "id", nullable = false)
+    private User client;
 
-    @NotNull
-    @ManyToOne(optional = false)
-    private User user;
 
-    /**
-     * Date et heure à laquelle la réservation a été créée.
-     */
-    @NotNull
-    @Column(nullable = false)
-    private LocalDateTime reservationDate;
+    // Date de début de la location
+    private LocalDate startDate;
 
-    /**
-     * Date et heure d'expiration de la location.
-     */
-    @Column
-    private LocalDateTime expirationDate;
+    // Date de fin de la location
+    private LocalDate endDate;
 
-    /**
-     * Indique si la location a été confirmée.
-     */
-    @Column
-    private boolean confirmed = false;
+    // Statut de la location (PENDING, APPROVED, etc.)
+    @Enumerated(EnumType.STRING)
+    private RentalStatus status;
 
-    /**
-     * Commentaires ou notes sur la location.
-     */
-    @Column(columnDefinition = "TEXT")
-    private String comments;
+    // Date de création de la location
+    private LocalDateTime createdAt = LocalDateTime.now();
 
-    /**
-     * Statut de retour du produit.
-     * Peut être null (pas encore retourné), "good" (bon état), "damaged" (endommagé), etc.
-     */
-    @Column
-    private String returnStatus;
-
-    /**
-     * Date et heure de retour effectif du produit.
-     */
-    @Column
-    private LocalDateTime actualReturnDate;
-
-    // Méthodes utilitaires
-
-    /**
-     * Vérifie si la location est active (non expirée).
-     * @return true si la location est toujours active
-     */
-    @Transient
-    public boolean isActive() {
-        if (expirationDate == null) {
-            return true;
-        }
-        return expirationDate.isAfter(LocalDateTime.now());
-    }
-
-    /**
-     * Vérifie si la location est en retard.
-     * @return true si la location est en retard
-     */
-    @Transient
-    public boolean isOverdue() {
-        return isActive() == false && actualReturnDate == null;
-    }
+    @NotNull(message = "La quantité est requise")
+    @Min(value = 1, message = "La quantité doit être au moins 1")
+    private Integer quantity;
 }
+
+
+//J’utilise Long pour l’ID car c’est adapté aux bases de données (équivalent à BIGINT), et nullable
+//tant que l’objet n’est pas encore enregistré. Le modèle est simple : une location est liée à un produit,
+//à un client, et à une période. Le statut permet de suivre l’évolution.
