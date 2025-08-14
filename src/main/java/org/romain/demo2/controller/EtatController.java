@@ -1,6 +1,5 @@
 package org.romain.demo2.controller;
 
-
 import org.romain.demo2.dao.EtatDao;
 import org.romain.demo2.model.Etat;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,14 +10,13 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Optional;
 
+@RequestMapping("/api")
 @CrossOrigin
 @RestController
 public class EtatController {
 
-
     //@Autowired //Fait le lien avec la dépendence EtatDao
     //protected EtatDao etatDao;
-
     protected EtatDao etatDao;
 
     @Autowired
@@ -27,7 +25,7 @@ public class EtatController {
     }
 
     @GetMapping("/etat/{id}")
-    public ResponseEntity<Etat> /* être plus precis sur le retour de la methode */ get(@PathVariable int id) {
+    public ResponseEntity<Etat> /* être plus precis sur le retour de la methode */ get(@PathVariable Long id) {
 
         Optional<Etat> etatOptional = etatDao.findById(id);
 
@@ -55,7 +53,7 @@ public class EtatController {
     }
 
     @DeleteMapping("/etat/{id}")
-    public ResponseEntity<Etat> delete(@PathVariable int id) {
+    public ResponseEntity<Etat> delete(@PathVariable Long id) {
 
         Optional<Etat> etatOptional = etatDao.findById(id);
 
@@ -70,7 +68,7 @@ public class EtatController {
 
     @PutMapping("/etat/{id}") //mise à jour
     public ResponseEntity<Etat> update(
-            @PathVariable int id,
+            @PathVariable Long id,
             @RequestBody Etat etat) {
 
         Optional<Etat> etatOptional = etatDao.findById(id);

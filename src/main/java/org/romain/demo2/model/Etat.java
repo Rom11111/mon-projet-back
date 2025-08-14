@@ -13,10 +13,8 @@ public class Etat {
 
     @Id // Preciser quelle propriété a une clé primaire
     @GeneratedValue(strategy = GenerationType.IDENTITY) //Stratégie à appliquer
-    protected Integer id;
+    protected Long id;
 
     @Column(nullable = false)
     protected String name;
-
-
 }
