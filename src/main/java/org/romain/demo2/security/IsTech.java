@@ -13,5 +13,4 @@ import java.lang.annotation.Target;
 @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_TECH')")
 public @interface IsTech {
 
-
 }

@@ -8,9 +8,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Target({ElementType.METHOD, ElementType.TYPE})
-@Retention(RetentionPolicy.RUNTIME) //L'annotation est présente dans le bytecode et est disponible au moment de l'exécution
+@Retention(RetentionPolicy.RUNTIME)
 @PreAuthorize("hasAnyRole('ROLE_CLIENT', 'ROLE_ADMIN')")
 public @interface IsClient {
-
 
 }

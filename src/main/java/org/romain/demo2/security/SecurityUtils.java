@@ -25,12 +25,17 @@ public class SecurityUtils implements ISecurityUtils {
     @Override
     public String generateToken(AppUserDetails userDetails) {
 
-        //System.out.println(jwtSecret);
         return Jwts.builder()
+                // Sujet du token → ici l’email de l’utilisateur (identifiant unique)
                 .setSubject(userDetails.getUsername())
+                // Ajout d’informations supplémentaires (claims) :
+                // - le rôle de l’utilisateur
                 .addClaims(Map.of("role", getRole(userDetails)))
+                // - l’identifiant de l’utilisateur
                 .addClaims(Map.of("userId", userDetails.getUserId()))
+                // Signature du token avec l’algorithme HS256 et une clé secrète
                 .signWith(SignatureAlgorithm.HS256, jwtSecret)
+                // Génération finale du token sous forme de chaîne compacte
                 .compact();
     }
 
