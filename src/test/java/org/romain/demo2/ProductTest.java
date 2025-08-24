@@ -8,6 +8,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.romain.demo2.model.Product;
 
+import java.math.BigDecimal;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -16,56 +17,59 @@ public class ProductTest {
 
     private Validator validator;
 
-    /**
-     * Avant chaque test, je crée un Validator qui me permettra
-     * de vérifier les contraintes de validation (comme @NotBlank, @Min, etc.)
-     */
+    // Je crée un Validator avant chaque test (try-with-resources pour éviter le warning)
     @BeforeEach
     public void setUp() {
-        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
-        validator = factory.getValidator();
+        try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
+            validator = factory.getValidator();
+        }
     }
 
-    /**
-     * Je teste un produit valide pour vérifier qu'il passe toutes les contraintes
-     */
+    // Cas "valide" minimal : je remplis le strict nécessaire (name, code, price, stock)
     @Test
     void createValidProduct_shouldBeValid() {
-        Product productTest = new Product();
-        productTest.setPrice(10);
-        productTest.setCode("Test");
-        productTest.setName("Test");
+        Product p = new Product();
+        p.setName("Test");                        // @NotBlank
+        p.setCode("TEST-001");                    // @Size(min=3) + @NotBlank
+        p.setPrice(new BigDecimal("10.00"));      // @DecimalMin("0.1")
+        p.setStock(1);                            // @NotNull + @Min(0)
 
-        // Je vérifie s’il y a des violations de contraintes
-        Set<ConstraintViolation<Product>> violations = validator.validate(productTest);
+        Set<ConstraintViolation<Product>> violations = validator.validate(p);
 
-        // Je m’assure que le produit est bien valide (aucune erreur attendue)
-        assertTrue(violations.isEmpty());
+        // Utile en debug pour voir ce qui bloque si jamais ça échoue
+        if (!violations.isEmpty()) {
+            violations.forEach(v -> System.out.println(
+                    v.getPropertyPath() + " -> @" +
+                            v.getConstraintDescriptor().getAnnotation().annotationType().getSimpleName() +
+                            " : " + v.getMessage() + " (valeur=" + v.getInvalidValue() + ")"
+            ));
+        }
+
+        assertTrue(violations.isEmpty(), "Des contraintes ne sont pas respectées (voir la console).");
     }
 
-    /**
-     * Je teste un produit sans nom → il devrait échouer à cause du @NotBlank sur le champ "name"
-     */
+    // Sans name -> doit déclencher @NotBlank sur "name"
     @Test
     void createProductWithoutName_shouldNotBeValid() {
         Product productTest = new Product();
-        productTest.setPrice(10); // mais pas de nom !
+        productTest.setCode("TEST-001");               // j'évite une erreur sur "code"
+        productTest.setPrice(BigDecimal.valueOf(10));  // j'évite une erreur sur "price"
+        productTest.setStock(1);                       // j'évite une erreur sur "stock"
 
-        Set<ConstraintViolation<Object>> violations = validator.validate(productTest);
+        Set<ConstraintViolation<Product>> violations = validator.validate(productTest);
 
-        // Je vérifie que l'erreur "NotBlank" est bien levée sur le champ "name"
         boolean notBlankViolationExist = TestUtils.constraintExist(
                 violations, "name", "NotBlank");
-
         assertTrue(notBlankViolationExist);
     }
 
-    /**
-     * Je teste un produit sans code → doit échouer à cause de la contrainte @NotBlank sur "code"
-     */
+    // Sans code -> doit déclencher @NotBlank sur "code"
     @Test
     void createProductWithoutCode_shouldNotBeValid() {
-        Product productTest = new Product(); // pas de code défini
+        Product productTest = new Product();
+        productTest.setName("Test");
+        productTest.setPrice(BigDecimal.valueOf(10));
+        productTest.setStock(1);
 
         assertTrue(
                 TestUtils.constraintExist(
@@ -74,34 +78,54 @@ public class ProductTest {
                         "NotBlank"));
     }
 
-    /**
-     * Je teste un code trop court → doit échouer à cause de @Length(min=...) ou @Size(min=...)
-     */
+
+    // Code trop court -> doit déclencher @Size(min=3)
     @Test
     void createProductWithCodeTooShort_shouldNotBeValid() {
         Product productTest = new Product();
-        productTest.setCode("a"); // trop court !
+        productTest.setName("Test");
+        productTest.setPrice(BigDecimal.TEN);
+        productTest.setStock(1);
+        productTest.setCode("a"); // longueur 1 < min 3
 
         assertTrue(
                 TestUtils.constraintExist(
                         validator.validate(productTest),
                         "code",
-                        "Length")); // ou Size si tu utilises @Size dans ton entité
+                        "Size") //on vérifie le nom de l’annotation, pas le message
+        );
     }
 
-    /**
-     * Je teste un prix négatif → doit échouer à cause de @DecimalMin("0.0")
-     */
+
+    // Prix négatif -> doit déclencher @DecimalMin("0.1")
     @Test
     void createProductWithNegativePrice_shouldNotBeValid() {
         Product produitTest = new Product();
         produitTest.setName("test");
-        produitTest.setPrice(-10); // prix invalide
+        produitTest.setCode("TEST-001");
+        produitTest.setStock(1);
+        produitTest.setPrice(BigDecimal.valueOf(-10)); // négatif
 
         assertTrue(
                 TestUtils.constraintExist(
                         validator.validate(produitTest),
                         "price",
-                        "DecimalMin")); // on attend une contrainte de minimum
+                        "DecimalMin"));
+    }
+
+    // (Optionnel) Prix = 0 -> doit aussi échouer avec @DecimalMin("0.1") (borne)
+    @Test
+    void createProductWithZeroPrice_shouldNotBeValid() {
+        Product produitTest = new Product();
+        produitTest.setName("test");
+        produitTest.setCode("TEST-001");
+        produitTest.setStock(1);
+        produitTest.setPrice(BigDecimal.ZERO); // 0 < 0.1
+
+        assertTrue(
+                TestUtils.constraintExist(
+                        validator.validate(produitTest),
+                        "price",
+                        "DecimalMin"));
     }
 }

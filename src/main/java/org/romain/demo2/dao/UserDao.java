@@ -11,7 +11,10 @@ import java.util.Optional;
 @Repository
 public interface UserDao extends JpaRepository<User, Long> {
 
-    Optional<User> findByEmail(String email); //Permet de récupérer un User par son Email
+    //Permet de récupérer un User par son Email
+    Optional<User> findByEmail(String email);
+
+    // Récupère tous les utilisateurs d’un rôle donné
     Optional<User> findByEmailVerificationToken(String token);
     List<User> findByRole(Role role);
 }

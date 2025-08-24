@@ -33,8 +33,8 @@ public class RentalService {
     private static final Logger log = LoggerFactory.getLogger(RentalService.class);
 
     /**
-     * Crée une nouvelle location après toutes les vérifications métier.
-     * Je vérifie : produit existant, client valide, dates cohérentes, produit dispo.
+     * Création d’une nouvelle location.
+     * Vérifie : produit existant, client valide, dates correctes, quantité dispo.
      */
     public Rental createRental(RentalRequestDto request, Long clientId) {
         log.info("Création tentative - clientId={}, produitId={}, période={} → {}",
@@ -54,7 +54,7 @@ public class RentalService {
                     return new BusinessException("Client introuvable");
                 });
 
-        // Je vérifie que l'utilisateur est bien un client
+        // Vérifie que c’est bien un CLIENT
         if (client.getRole() != Role.CLIENT) {
             log.warn("Rôle invalide pour réservation - userId={}, rôle={}", client.getId(), client.getRole());
             throw new BusinessException("Seuls les clients peuvent réserver des produits");
@@ -74,18 +74,20 @@ public class RentalService {
 
         // Vérifie le stock disponible sur la période
         int reserved = rentalDao.sumQuantityForProductBetweenDates(
-                product.getId(),
-                request.getStartDate(),
-                request.getEndDate()
+                product.getId(), request.getStartDate(), request.getEndDate()
         );
+
+        // Stock restant = stock total - déjà réservé
         int available = product.getStock() - reserved;
 
+        // Si la demande dépasse le stock restant → on bloque
         if (request.getQuantity() > available) {
-            log.warn("Stock insuffisant - demandé={}, dispo sur période={}", request.getQuantity(), available);
-            throw new BusinessException("Stock insuffisant : il reste " + available + " unité(s) disponibles sur cette période.");
+            throw new BusinessException(
+                    "Stock insuffisant : " + available + " unité(s) disponibles sur cette période."
+            );
         }
 
-        // Je construis l’objet location
+        // Création de l’objet location
         Rental rental = new Rental();
         rental.setProduct(product);
         rental.setClient(client);
@@ -102,9 +104,9 @@ public class RentalService {
     }
 
     /**
-     * Renvoie toutes les locations visibles par un utilisateur selon son rôle.
-     * - CLIENT : uniquement ses locations
-     * - ADMIN / TECH : toutes
+     * Retourne les locations accessibles selon le rôle :
+     * - CLIENT → seulement ses locations
+     * - ADMIN / TECH → toutes
      */
     public List<Rental> findAllAccessibleBy(User user) {
         log.info("Liste des locations récupérée pour userId={}, rôle={}", user.getId(), user.getRole());
@@ -115,7 +117,7 @@ public class RentalService {
     }
 
     /**
-     * Permet de récupérer une location par son ID.
+     * Cherche une location par son ID.
      */
     public Optional<Rental> findById(Long id) {
         log.debug("Recherche location par ID - rentalId={}", id);
@@ -123,8 +125,8 @@ public class RentalService {
     }
 
     /**
-     * Vérifie si l'utilisateur connecté a le droit d'accéder à une location.
-     * Un client ne peut voir que ses propres locations.
+     * Vérifie si l’utilisateur a le droit de voir une location.
+     * Un client → seulement les siennes.
      */
     public boolean canAccessRental(User user, Rental rental) {
         log.debug("Vérification accès location - userId={}, rentalId={}, résultat={}",
@@ -164,13 +166,8 @@ public class RentalService {
     }
 
     /**
-     * Met à jour uniquement le statut d'une location (APPROVED, REJECTED, etc.).
-     * Réservé aux rôles techniques (ADMIN / TECH).
-     *
-     * @param rentalId   l'identifiant de la location à modifier
-     * @param newStatus  le nouveau statut à appliquer
-     * @return la location mise à jour avec le nouveau statut
-     * @throws BusinessException si la location n'existe pas
+     * Change seulement le statut d’une location.
+     * (APPROVED, REJECTED… réservé ADMIN/TECH)
      */
     public Rental updateStatus(Long rentalId, RentalStatus newStatus) {
         // Je cherche la location par son ID, sinon je lance une erreur métier claire
@@ -185,8 +182,9 @@ public class RentalService {
     }
 
     /**
-     * Supprime une location si l'utilisateur y est autorisé.
-     * Retourne true si suppression faite, false sinon.
+     * Supprime une location si autorisé.
+     * - ADMIN → tout supprimer
+     * - TECH → peut supprimer seulement ses propres locations
      */
     public boolean deleteRental(Long rentalId, User currentUser) {
         log.info("Suppression demandée - rentalId={}, userId={}, rôle={}", rentalId, currentUser.getId(), currentUser.getRole());
@@ -214,6 +212,9 @@ public class RentalService {
         return false;
     }
 
+    /**
+     * Création d’un signalement par un client sur une de ses locations.
+     */
     public Report reportProduct(Long rentalId, Long clientId, String description) {
         log.info("Signalement demandé - rentalId={}, clientId={}", rentalId, clientId);
 

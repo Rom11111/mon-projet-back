@@ -2,10 +2,7 @@ package org.romain.demo2.model;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.validator.constraints.Length;
@@ -29,9 +26,9 @@ public class Product {
     @JsonView(ProductViews.Client.class)
     private String name;
 
-    @Column(length = 15, nullable = false, unique = true)
-    @Length(max = 40, min = 3, message = "longueur entre 3 et 10")
+    @Size(min = 3, max = 40, message = "longueur entre 3 et 40")
     @NotBlank
+    @Column(length = 15, nullable = false, unique = true)
     @JsonView(ProductViews.Tech.class)
     private String code;
 

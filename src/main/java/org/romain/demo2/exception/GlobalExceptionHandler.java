@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -16,21 +17,29 @@ import java.util.stream.Collectors;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-    // Gère les erreurs métier (ex : produit déjà réservé)
+    // Erreurs métier (409) (ex : produit déjà réservé)
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ApiResponseDto<Void>> handleBusiness(BusinessException e) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(new ApiResponseDto<>(e.getMessage(), null));
     }
 
-    // Gère les erreurs de ressource introuvable (ex : produit inexistant)
+    // Ressource introuvable (404)
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiResponseDto<Void>> handleNotFound(ResourceNotFoundException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(new ApiResponseDto<>(e.getMessage(), null));
     }
 
-    // Gère les erreurs de validation (ex : champ manquant ou date invalide)
+    // Accès refusé (403)
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiResponseDto<Void>> handleAccessDenied(AccessDeniedException e) {
+        // Explication simple : l’utilisateur est authentifié, mais n’a pas le rôle requis.
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(new ApiResponseDto<>("Accès refusé", null));
+    }
+
+    // Erreurs de validation (400)
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponseDto<Map<String, String>>> handleValidation(MethodArgumentNotValidException ex) {
         // Je récupère les erreurs champ par champ en concaténant si nécessaire

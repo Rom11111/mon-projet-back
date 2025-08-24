@@ -18,16 +18,15 @@ public interface RentalDao extends JpaRepository<Rental, Long> {
     List<Rental> findByClientId(Long clientId);
 
     /**
-     * Retourne les réservations qui chevauchent une période donnée pour un produit.
-     * Une réservation est en conflit si :
-     * - Sa date de début est avant ou le jour de la fin demandée
-     * - Sa date de fin est après ou le jour du début demandé
-     * Si cette méthode retourne une liste non vide, alors le produit est déjà réservé.
+     * Cherche toutes les réservations d’un produit qui se chevauchent avec une période donnée.
+     * En clair : si la liste n’est pas vide, ça veut dire que le produit est déjà pris sur cette période.
      */
     List<Rental> findByProductIdAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
             Long productId, LocalDate end, LocalDate start
     );
 
+    // Calcule combien d’unités d’un produit sont déjà réservées sur une période.
+    // Sert à gérer le stock restant.
     @Query("""
         SELECT COALESCE(SUM(r.quantity), 0)
         FROM Rental r

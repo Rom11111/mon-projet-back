@@ -57,3 +57,4 @@ public class Rental {
 //J’utilise Long pour l’ID car c’est adapté aux bases de données (équivalent à BIGINT), et nullable
 //tant que l’objet n’est pas encore enregistré. Le modèle est simple : une location est liée à un produit,
 //à un client, et à une période. Le statut permet de suivre l’évolution.
+

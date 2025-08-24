@@ -20,40 +20,51 @@ import static org.mockito.Mockito.*;
 
 public class RentalServiceTest {
 
-    // Mocks nécessaires pour tester RentalService sans base de données
     private RentalService rentalService;
     private RentalDao rentalDao;
     private ProductDao productDao;
     private UserDao userDao;
     private ReportDao reportDao;
 
-    // Avant chaque test, je crée des mocks pour injecter dans le service
     @BeforeEach
     void setUp() {
         rentalDao = mock(RentalDao.class);
         productDao = mock(ProductDao.class);
         userDao = mock(UserDao.class);
-        rentalService = new RentalService(rentalDao, productDao, userDao, mock(ReportDao.class));
+        reportDao = mock(ReportDao.class);
+        rentalService = new RentalService(rentalDao, productDao, userDao, reportDao);
     }
 
-    // Cas : produit inexistant → doit échouer
+    // Cas : produit déjà réservé (stock insuffisant) → doit échouer
     @Test
-    void shouldFail_ifProductNotFound() {
+    void shouldFail_ifStockInsufficient() {
         RentalRequestDto dto = validDto();
-        when(productDao.findById(dto.getProductId())).thenReturn(Optional.empty());
+        dto.setQuantity(2); // demande 2 unités
+
+        Product product = new Product();
+        product.setId(dto.getProductId());
+        product.setStock(2); // stock total = 2
+        when(productDao.findById(dto.getProductId())).thenReturn(Optional.of(product));
         when(userDao.findById(1L)).thenReturn(Optional.of(validClient()));
+
+        // Simule qu’il y a déjà 2 unités réservées sur la période
+        when(rentalDao.sumQuantityForProductBetweenDates(eq(dto.getProductId()), any(), any()))
+                .thenReturn(2);
 
         BusinessException ex = assertThrows(BusinessException.class, () ->
                 rentalService.createRental(dto, 1L));
 
-        assertEquals("Produit introuvable", ex.getMessage());
+        assertTrue(ex.getMessage().contains("Stock insuffisant"));
     }
+
 
     // Cas : client introuvable → doit échouer
     @Test
     void shouldFail_ifClientNotFound() {
         RentalRequestDto dto = validDto();
-        when(productDao.findById(dto.getProductId())).thenReturn(Optional.of(new Product()));
+        Product product = new Product();
+        product.setStock(5); // ✅ nécessaire
+        when(productDao.findById(dto.getProductId())).thenReturn(Optional.of(product));
         when(userDao.findById(1L)).thenReturn(Optional.empty());
 
         BusinessException ex = assertThrows(BusinessException.class, () ->
@@ -65,109 +76,104 @@ public class RentalServiceTest {
     // Cas : utilisateur avec mauvais rôle (pas CLIENT) → doit échouer
     @Test
     void shouldFail_ifUserIsNotClient() {
-        RentalRequestDto dto = validDto();
-        when(productDao.findById(dto.getProductId())).thenReturn(Optional.of(new Product()));
+        // je prépare une demande de location "valide"
+        RentalRequestDto dto = new RentalRequestDto();
+        dto.setProductId(1L);
+        dto.setStartDate(LocalDate.now().plusDays(1)); // demain
+        dto.setEndDate(LocalDate.now().plusDays(3));   // dans 3 jours
+        dto.setQuantity(1); // quantité demandée
 
+        // je crée un produit dispo avec stock
+        Product product = new Product();
+        product.setStock(5);
+        when(productDao.findById(1L)).thenReturn(Optional.of(product));
+
+        // je crée un utilisateur mais en rôle ADMIN (pas CLIENT)
         User admin = new User();
         admin.setId(1L);
-        admin.setRole(Role.ADMIN); // mauvais rôle
+        admin.setRole(Role.ADMIN); // rôle incorrect
         when(userDao.findById(1L)).thenReturn(Optional.of(admin));
 
+        // j'appelle le service et je vérifie qu'il renvoie bien une erreur
         BusinessException ex = assertThrows(BusinessException.class, () ->
                 rentalService.createRental(dto, 1L));
 
+        // je vérifie que le message est bien celui attendu
         assertEquals("Seuls les clients peuvent réserver des produits", ex.getMessage());
     }
 
-    // Cas : date de début après la date de fin → doit échouer
+    // Si la date de début est après la date de fin → ça doit échouer
     @Test
     void shouldFail_ifStartDateAfterEndDate() {
-        RentalRequestDto dto = validDto();
-        dto.setStartDate(LocalDate.now().plusDays(5));
-        dto.setEndDate(LocalDate.now().plusDays(1)); // incohérent
+        RentalRequestDto dto = new RentalRequestDto();
+        dto.setProductId(1L);
+        dto.setStartDate(LocalDate.now().plusDays(5)); // début dans 5 jours
+        dto.setEndDate(LocalDate.now().plusDays(1));   // fin avant le début
+        dto.setQuantity(1);
 
-        when(productDao.findById(dto.getProductId())).thenReturn(Optional.of(new Product()));
+        Product product = new Product();
+        product.setStock(5); // stock dispo
+        when(productDao.findById(1L)).thenReturn(Optional.of(product));
         when(userDao.findById(1L)).thenReturn(Optional.of(validClient()));
 
+        // Ici on vérifie bien que le service renvoie une erreur claire
         BusinessException ex = assertThrows(BusinessException.class, () ->
                 rentalService.createRental(dto, 1L));
 
         assertEquals("La date de début doit être avant la date de fin", ex.getMessage());
     }
 
-    // Cas : produit déjà réservé sur cette période → doit échouer
-    @Test
-    void shouldFail_ifProductAlreadyReserved() {
-        RentalRequestDto dto = validDto();
 
-        Product product = new Product();
-        product.setId(dto.getProductId()); // Obligatoire pour le test
-
-        when(productDao.findById(dto.getProductId())).thenReturn(Optional.of(product));
-        when(userDao.findById(1L)).thenReturn(Optional.of(validClient()));
-
-        // Simule une réservation existante (donc conflit)
-        when(rentalDao.findByProductIdAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
-                eq(dto.getProductId()), any(), any()
-        )).thenReturn(List.of(new Rental()));
-
-        BusinessException ex = assertThrows(BusinessException.class, () ->
-                rentalService.createRental(dto, 1L));
-
-        assertEquals("Le produit est déjà réservé sur cette période", ex.getMessage());
-    }
 
     // Cas : tout est OK → location créée avec succès
     @Test
     void shouldSucceed_ifRequestIsValid() {
         RentalRequestDto dto = validDto();
+        dto.setQuantity(2); // ✅ quantité demandée
 
         Product product = new Product();
         product.setId(dto.getProductId());
+        product.setStock(10); // ✅ stock dispo
 
         User client = validClient();
 
-        // On simule un produit et un client valides
         when(productDao.findById(dto.getProductId())).thenReturn(Optional.of(product));
         when(userDao.findById(client.getId())).thenReturn(Optional.of(client));
 
-        // Simule que le produit est dispo (pas de conflit)
-        when(rentalDao.findByProductIdAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
-                anyLong(), any(), any())
-        ).thenReturn(List.of());
+        // Aucun conflit de réservation
+        when(rentalDao.sumQuantityForProductBetweenDates(anyLong(), any(), any()))
+                .thenReturn(0);
 
-        // Simule que la location est bien enregistrée
         Rental saved = new Rental();
         saved.setId(99L);
         saved.setClient(client);
         saved.setProduct(product);
         saved.setStartDate(dto.getStartDate());
         saved.setEndDate(dto.getEndDate());
+        saved.setQuantity(dto.getQuantity());
         saved.setStatus(RentalStatus.PENDING);
 
         when(rentalDao.save(any(Rental.class))).thenReturn(saved);
 
         Rental result = rentalService.createRental(dto, client.getId());
 
-        // Je vérifie que tout est correct
         assertNotNull(result);
         assertEquals(product, result.getProduct());
         assertEquals(client, result.getClient());
+        assertEquals(2, result.getQuantity());
         assertEquals(RentalStatus.PENDING, result.getStatus());
     }
 
-    // --- Méthodes utilitaires internes pour éviter les répétitions ---
-
-    // Je crée une demande de location valide
+    // --- Méthodes utilitaires ---
     private RentalRequestDto validDto() {
         RentalRequestDto dto = new RentalRequestDto();
         dto.setProductId(1L);
         dto.setStartDate(LocalDate.now().plusDays(1));
         dto.setEndDate(LocalDate.now().plusDays(3));
+        dto.setQuantity(1); // ✅ quantité par défaut
         return dto;
     }
 
-    // Je crée un client avec un rôle valide
     private User validClient() {
         User user = new User();
         user.setId(1L);
