@@ -133,7 +133,7 @@ public class ProductController {
             @ApiResponse(responseCode = "403", description = "Accès interdit"),
             @ApiResponse(responseCode = "404", description = "Produit introuvable")
     })
-    public ResponseEntity<ApiResponseDto<Void>> deleteProduct(
+    public ResponseEntity<ApiResponseDto<Void>> delete(
             @PathVariable Long id,
             @AuthenticationPrincipal AppUserDetails userDetails) {
 
