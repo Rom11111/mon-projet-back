@@ -7,7 +7,7 @@ import jakarta.validation.ValidatorFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.romain.demo2.model.Product;
-
+import java.math.BigDecimal;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -32,7 +32,7 @@ public class ProductTest {
     @Test
     void createValidProduct_shouldBeValid() {
         Product productTest = new Product();
-        productTest.setPrice(10);
+        productTest.setPrice(BigDecimal.valueOf(10)); // BigDecimal est utilisé pour éviter les imprécisions sur les prix
         productTest.setCode("Test");
         productTest.setName("Test");
 
@@ -49,8 +49,7 @@ public class ProductTest {
     @Test
     void createProductWithoutName_shouldNotBeValid() {
         Product productTest = new Product();
-        productTest.setPrice(10); // mais pas de nom !
-
+        productTest.setPrice(BigDecimal.valueOf(10)); // BigDecimal est utilisé pour éviter les imprécisions sur les prix
         Set<ConstraintViolation<Object>> violations = validator.validate(productTest);
 
         // Je vérifie que l'erreur "NotBlank" est bien levée sur le champ "name"
@@ -96,7 +95,7 @@ public class ProductTest {
     void createProductWithNegativePrice_shouldNotBeValid() {
         Product produitTest = new Product();
         produitTest.setName("test");
-        produitTest.setPrice(-10); // prix invalide
+        produitTest.setPrice(BigDecimal.valueOf(-10)); // Prix négatif volontaire pour tester @DecimalMin
 
         assertTrue(
                 TestUtils.constraintExist(

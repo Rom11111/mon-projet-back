@@ -12,6 +12,7 @@ import org.romain.demo2.model.User;
 import org.romain.demo2.security.AppUserDetails;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.romain.demo2.dto.ApiResponseDto;
 
 public class ProductControllerTest {
 
@@ -40,13 +41,14 @@ public class ProductControllerTest {
     }
 
     @Test
-    void deleteExistingProductBySellerOwner_shouldSend204noContent() {
+    void deleteExistingProductBySellerOwner_shouldSend200ok() {
         User fakeUser = new User();
         fakeUser.setId(1L);
         AppUserDetails userDetails = new AppUserDetails(fakeUser);
 
-        ResponseEntity<Product> response = productController.delete(1L, userDetails);
-        Assertions.assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+        ResponseEntity<ApiResponseDto<Void>> response = productController.deleteProduct(1L, userDetails);
+
+        Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
     }
 
     @Test
@@ -55,7 +57,7 @@ public class ProductControllerTest {
         fakeUser.setId(2L);
         AppUserDetails userDetails = new AppUserDetails(fakeUser);
 
-        ResponseEntity<Product> response = productController.delete(1L, userDetails);
+        ResponseEntity<ApiResponseDto<Void>> response = productController.deleteProduct(1L, userDetails);
         Assertions.assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
     }
 
@@ -66,7 +68,7 @@ public class ProductControllerTest {
         AppUserDetails userDetails = new AppUserDetails(fakeUser);
 
 
-        ResponseEntity<Product> response = productController.delete(1L, userDetails);
+        ResponseEntity<ApiResponseDto<Void>> response = productController.deleteProduct(1L, userDetails);
         Assertions.assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
     }
 }

@@ -11,6 +11,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.math.BigDecimal;
+
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -30,6 +32,9 @@ class Demo2ApplicationTests {
                 .webAppContextSetup(context)
                 .apply(springSecurity())
                 .build();
+
+        // ObjectMapper sert à convertir les objets Java en JSON
+        mapper = new ObjectMapper();
     }
 
     @Test
@@ -87,7 +92,9 @@ class Demo2ApplicationTests {
         Product product = new Product();
         product.setName("Test");
         product.setCode("Test");
-        product.setPrice(0.11f);
+        product.setPrice(BigDecimal.valueOf(10)); // BigDecimal est utilisé car price attend un prix précis
+
+        // On transforme l'objet Java en JSON pour l'envoyer dans la requête HTTP
         String jsonProduct = mapper.writeValueAsString(product);
 
         mvc.perform(
@@ -96,7 +103,6 @@ class Demo2ApplicationTests {
                                 .content(jsonProduct)
                 )
                 .andExpect(status().isCreated());
-
     }
 }
 
